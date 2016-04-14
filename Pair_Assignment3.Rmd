@@ -94,7 +94,7 @@ Furthermore, we created an additional variable for top positions in *Sparkassen*
 SparkassenBoard$TopPosition <- 0
 SparkassenBoard$TopPosition[SparkassenBoard$chair != "no"] <- 1
 SparkassenBoard$TopPosition <- as.character(SparkassenBoard$TopPosition)
-```
+``
 
 
 Finally, we created three sub-dataframes by subsetting the initial dataframe in order to analyze different aspects of *Sparkassen* boards in greater detail. Hence, we created a subset containing unique board member profiles, another one with unique profiles of mayors on the board, and a dataframe containing only profiles of persons in top positions on the board.
@@ -144,6 +144,12 @@ names(MayorElection)
 # 4. Merging the Data
 
 # 5. Describing the Data
+
+## 5.1. Sparkassen Dataset
+
+## 5.2. Election Dataset
+
+## 5.3. Merged Dataset
 
 # 6. First Inferences
 
