@@ -1,0 +1,124 @@
+---
+title: 'Pair Assignment 3: Gathering, Cleaning, Merging and Exploring our Data'
+subtitle: "Course: Introduction to Collaborative Social Science Data Analysis"
+author: |
+  | Malte Berneaud-Kötz & Jonas Markgraf
+  | Hertie School of Governance
+date:         "14 April 2016"
+output:       pdf_document
+header-includes:
+  - \usepackage{setspace}
+  - \doublespacing
+---
+
+# 1. Introduction[^3]
+```{r setting_chunk_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='graphs/',
+                      include = FALSE, warning=FALSE, message=FALSE)
+# Supressed output for any code chunk in the document, so all graphs, tables, 
+# etc which need to have the outputs shown should use include = TRUE as an option
+```
+
+```{r fetching_packages}
+ # Packages needed for the execution of this Rmd are listed in include.packages and checked against the installed packages on the machine executing the code. If they are not installed, they will be installed automatically.
+include.packages <- c("dplyr", "ggplot2", "stringr", "readxl")
+  needed.packages <- include.packages[!(include.packages %in% installed.packages()[, "Package"])]
+if(length(needed.packages)) install.packages(needed.packages, repos = "https://cran.uni-muenster.de/")
+  
+lapply(include.packages, library, character.only = TRUE)  # loading all packages at once
+```
+
+```{r loading_data}
+SparkassenBoard <- read.table("data/BankBoards_Bavaria_RImport.txt", 
+                        sep="\t", header = TRUE, fileEncoding ="UTF-16")
+MayorElection <- read_excel("data/MayorElectionData.xlsx", sheet = "Bgm_OB")
+
+```
+
+# 2. Gathering the Data
+
+## 2.1 Bank Board Data
+We hand-collect a unique panel dataset on the composition of Boards of Directors in Bavaria's *Sparkassen*. This dataset includes detailed information on board member profiles which enables us to identify mayors on bank boards:
+
+- name of board members;
+
+- occupation of board members (identifier for mayors on board);
+
+- position within board: normal board member, chairman, or vice chairman.
+
+Annual information on Board of Directors is hand-collected from savings banks' annual reports available in PDF format on *Bundesanzeiger* for the years from 2006 to 2015; access to data prior 2006 is proprietary (Bureau van Djik's *Bankscope* database), which restricts our observation period. The dataset on boardroom composition constitutes the first comprehensive and systematic investigation of Bavarian savings banks' corporate governance as information on German public banks' boards has not been systematically collected yet.
+
+## 2.2 Municipal Election Data
+A database on mayoral elections in Bavaria is available from the state statistical office upon request. It contains data on direct municipal elections between 1948 and 2014. With this database we are covering 79 of the 416 German *Sparkassen* (19%) and 2,099 municipalities (19% of all municipalities in Germany). The data for mayoral elections contains the following variables:
+
+- election date;
+  
+- name of election winner and (at least) the first loser;
+
+- party affiliation of candidates;
+
+- vote shares of candidates;
+  
+- dummy for competitive elections (at least two candidates);
+  
+- dummy for 'first-time mayor';
+
+- number of eligible voters in voting district (size of municipality).
+
+After obtaining the raw data, we cleaned the data set and subsequently created additional variables needed in our analysis. The individual steps taken are outline in the 
+
+# 3. Cleaning the Data
+## 3.1 *Sparkassen* Data
+The data we obtained on the *Sparkassen* had really long and unwieldy names, which we changed to make them more manageable. Moreover, we standardized them to follow use underscores to seperate words and use lower case. 
+```{r renaming_columns}
+oldnames <- c("^name$", "^political...employee$", "^governing...opposition$", "retired.1.yes.",
+              "^Incumbent$", "Name_CountyMunicipality", "Type_CountyMunicipality")
+newnames <- c("name_candidate_1", "political_employee", "governing_opposition", "retired", "incumbent",
+              "name_municipality", "type_county_municipality")
+for (i in seq_along(oldnames)) {
+  names(SparkassenBoard) <- gsub(oldnames[i], newnames[i], names(SparkassenBoard))
+}
+
+```
+
+The strings containing the municipality names and the names of mayor candidates contained unnecessary whitespace which we trimmed using the str_trim function from the stringr package. 
+
+```{r trimming_whitespace}
+SparkassenBoard$name_municipality <- str_trim(SparkassenBoard$name_municipality)
+SparkassenBoard$name_candidate_1 <- str_trim(SparkassenBoard$name_candidate_1)
+```
+
+## 3.2 Creating Additional Variables
+In addition to the variables available in the data set already, we created variables (1) distinguishing 'first time mayors', (2) identifying competitive elections where there were more than one candidate, (3) the number of times a single mayor was elected, which allowed us to identify mayor's first re-election. This last point is important because our research is interested in the first re-election of mayors specifically. 
+
+```{r adding_new_variables}
+# Dummy variable for holding a top position in the Sparkassen board (chair or deputy chair)
+
+SparkassenBoard$top_position <- NA
+for(i in 1:nrow(SparkassenBoard)) {
+  if(is.na(SparkassenBoard$chair[i])) {
+    next 
+    } 
+  if(SparkassenBoard$chair[i] == "yes") {
+    SparkassenBoard$top_position[i] <- 1
+  } else if(SparkassenBoard$chair[i] == "deputy") {
+    SparkassenBoard$top_position[i] <- 1
+  } else {
+    SparkassenBoard$top_position[i] <- 0
+  }
+}
+
+# dummy variable for 
+```
+
+
+## 3.3 Municipal Election Data
+
+
+# 4. Merging the Data
+
+# 5. Describing the Data
+
+# 6. First Inferences
+
+[^3]: This paper is based on and a part of a research project by Guillermo Rosas (Washington University in St. Louis; grosas@wustl.edu) and Jonas Markgraf (Hertie School of Governance; markgraf@hertie-school.org).
