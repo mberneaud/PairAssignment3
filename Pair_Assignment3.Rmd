@@ -94,18 +94,18 @@ Furthermore, we created an additional variable for top positions in *Sparkassen*
 SparkassenBoard$TopPosition <- 0
 SparkassenBoard$TopPosition[SparkassenBoard$chair != "no"] <- 1
 SparkassenBoard$TopPosition <- as.character(SparkassenBoard$TopPosition)
-``
 
+```
 
 Finally, we created three sub-dataframes by subsetting the initial dataframe in order to analyze different aspects of *Sparkassen* boards in greater detail. Hence, we created a subset containing unique board member profiles, another one with unique profiles of mayors on the board, and a dataframe containing only profiles of persons in top positions on the board.
 
 ```{r subsetting dataframe}
 # Create sub-dataframes
 ## :unique board members
-SparkassenBoard_UniqueMembers <- unique(SparkassenBoard[,c("NameCandidate1", "occupation", "Incumbent", "TopPosition",
-                                      "NameMunicipality")])
+SparkassenBoard_UniqueMembers <- unique(SparkassenBoard[,c("name_candidate_1", "occupation", "incumbent", "TopPosition",
+                                      "name_municipality")])
 ## :mayors at board
-SparkassenBoard_UniqueBoardMayors <- subset(SparkassenBoard_UniqueMembers, Incumbent == "1")
+SparkassenBoard_UniqueBoardMayors <- subset(SparkassenBoard_UniqueMembers, incumbent == "1")
 ## :Top Positions only
 SparkassenBoard_TopPositions <- subset(SparkassenBoard, TopPosition == 1)
 
@@ -114,34 +114,59 @@ SparkassenBoard_TopPositions <- subset(SparkassenBoard, TopPosition == 1)
 ## 3.2 Creating Additional Variables
 In addition to the variables available in the data set already, we created variables (1) distinguishing 'first time mayors', (2) identifying competitive elections where there were more than one candidate, (3) the number of times a single mayor was elected, which allowed us to identify mayor's first re-election. This last point is important because our research is interested in the first re-election of mayors specifically. 
 
-```{r adding_new_variables}
-# Dummy variable for holding a top position in the Sparkassen board (chair or deputy chair)
+## 3.3 Municipal Election Data
+The municipal election data as provided by the Bavarian Statistical Service was provided as an Excel worksheet, which also meant that the columns where named in a way which was not computer-readable. As a result, we had to clean the names of the data set almost entirely. Aside from containing spaces, they also frequently contained line breaks and carriage returns.
 
-SparkassenBoard$top_position <- NA
-for(i in 1:nrow(SparkassenBoard)) {
-  if(is.na(SparkassenBoard$chair[i])) {
-    next 
-    } 
-  if(SparkassenBoard$chair[i] == "yes") {
-    SparkassenBoard$top_position[i] <- 1
-  } else if(SparkassenBoard$chair[i] == "deputy") {
-    SparkassenBoard$top_position[i] <- 1
+```{r cleaning_names_municipality_elections}
+# removing newlines
+names(MayorElection) <- str_replace_all(names(MayorElection), "[\r\n]" , "")  
+# removing punctuation
+names(MayorElection) <- gsub("[[:punct:]]", "", names(MayorElection))
+# removing whitespace
+names(MayorElection) <- str_trim(names(MayorElection))
+# correcting "Geschlecht"
+names(MayorElection) <- gsub("^Geschl", "Geschlecht", names(MayorElection))
+
+# Changing label names
+newnames <- c("IDMunicipality","NameMunicipality", "ElectionDate", "RunOffNecessary", "ElectionType", "ProfPolitician", "NumberEligVoter", "NumberVoters", "InvalBallots", "ValBallots", "NameCandidate1")
+
+names(MayorElection)[1:11] <- newnames
+
+names(MayorElection) <- gsub("gültigeStimmen 1", "VotesCandidate1", names(MayorElection))
+names(MayorElection) <- gsub("Stimmen für nicht genannte Bewerber zusammen", "VotesRest", names(MayorElection))
+
+```
+Aside from the variables included in the data set, we extracted information on Phd titles from the names of the candidates, to include it as a control variable. Addtionally, we created a variable which indicates whether or not the election of the mayor is is . We want to use this variable in subsetting our data set later, as it identifies mayors which could have possibly leveraged their position in a *Sparkassen* board to secure re-election. 
+
+```{r additional_variables}
+# Extracting Phd titles
+MayorElection$Phd <- NA
+MayorElection$Phd <- ifelse(grepl("Dr.", MayorElection$NameCandidate1), 1, 0)
+MayorElection$NameCandidate1 <- gsub(" Dr.", "", MayorElection$NameCandidate1)
+MayorElection$NameCandidate1 <- gsub(" jur.", "", MayorElection$NameCandidate1)
+
+# creating re-election dummy
+MayorElection$Reelection <- NA
+for(i in 2:nrow(MayorElection)) {
+  if(MayorElection$NameCandidate1[i] == MayorElection$NameCandidate1[i-1]) {
+    MayorElection$Reelection[i] <- 1
   } else {
-    SparkassenBoard$top_position[i] <- 0
+    MayorElection$Reelection[i] <- 0
   }
 }
 
+
+# creating the total number of terms for each mayor
+tally <- dplyr::tally(group_by(MayorElection, NameCandidate1))
+names(tally)[2] <- "TotalTerms"
+#merging that back into the data frame
+MayorElection <- merge(MayorElection, tally)
+
+# TODO: creating variable indicating number of terms
 ```
-
-## 3.3 Municipal Election Data
-The municipal election data as provided by the Bavarian Statistical Service was provided as an Excel worksheet, which also meant that the columns where named in a way which was not computer-readable. As a result, we had to clean the names of the data set almost entirely. Aside from containing spaces, they also frequently contained line breaks and 
-
-```{r cleaning_names_municipality_elections}
-names(MayorElection)
-```
-
 
 # 4. Merging the Data
+
 
 # 5. Describing the Data
 
