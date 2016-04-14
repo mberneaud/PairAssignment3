@@ -108,11 +108,14 @@ for(i in 1:nrow(SparkassenBoard)) {
   }
 }
 
-# dummy variable for 
 ```
 
-
 ## 3.3 Municipal Election Data
+The municipal election data as provided by the Bavarian Statistical Service was provided as an Excel worksheet, which also meant that the columns where named in a way which was not computer-readable. As a result, we had to clean the names of the data set almost entirely. Aside from containing spaces, they also frequently contained line breaks and 
+
+```{r cleaning_names_municipality_elections}
+names(MayorElection)
+```
 
 
 # 4. Merging the Data
