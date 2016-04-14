@@ -43,10 +43,5 @@ SparkassenBoard_UniqueMembers <- unique(SparkassenBoard[,c("NameCandidate1", "oc
                                       "NameMunicipality")])
 ## :mayors at board
 SparkassenBoard_UniqueBoardMayors <- subset(SparkassenBoard_UniqueMembers, Incumbent == "1")
-
-## :unique banks
-SparkassenBoard_UniqueBanks <- unique(SparkassenBoard[,c("bank_ID", "bank_name", "federal_state", 
-                                    "city", "board_size")])
-
 ## :Top Positions only
 SparkassenBoard_TopPositions <- subset(SparkassenBoard, TopPosition == 1)
