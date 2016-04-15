@@ -69,6 +69,7 @@ A database on mayoral elections in Bavaria is available from the state statistic
 After obtaining the raw data, we cleaned the data set and subsequently created additional variables needed in our analysis. The individual steps taken are outline in the 
 
 # 3. Cleaning the Data
+
 ## 3.1 *Sparkassen* Data
 The data we obtained on the *Sparkassen* had really long and unwieldy names, which we changed to make them more manageable. Moreover, we standardized them to follow use underscores to seperate words and use lower case. 
 ```{r renaming_columns}
@@ -89,7 +90,7 @@ SparkassenBoard$name_municipality <- str_trim(SparkassenBoard$name_municipality)
 SparkassenBoard$name_candidate_1 <- str_trim(SparkassenBoard$name_candidate_1)
 ```
 
-Furthermore, we created an additional variable for top positions in *Sparkassen* boards. The raw data includes information on the position of the respective person (normal board member, vice chairman or chairman); since chairmen and vice chairmen alternative over years in Bavarian savings banks, there is no difference between chairmen and vice chairmen and the can be amalgamated into one category (top position).
+Furthermore, we created an additional variable for top positions in *Sparkassen* boards. The raw data includes information on the position of the respective person (normal board member, vice chairman or chairman); since chairmen and vice chairmen alternate over the years in Bavarian savings banks, there is no difference between chairmen and vice chairmen in reality and they can be amalgamated into one category (*top position*).
 
 ```{r creating new variable for top position}
 SparkassenBoard$TopPosition <- 0
@@ -98,7 +99,7 @@ SparkassenBoard$TopPosition <- as.character(SparkassenBoard$TopPosition)
 
 ```
 
-Finally, we created three sub-dataframes by subsetting the initial dataframe in order to analyze different aspects of *Sparkassen* boards in greater detail. Hence, we created a subset containing unique board member profiles, another one with unique profiles of mayors on the board, and a dataframe containing only profiles of persons in top positions on the board.
+Finally, we created three sub-data frames by subsetting the initial dataframe in order to analyze different aspects of *Sparkassen* boards in greater detail. Hence, we created a subset containing unique board member profiles, another one with unique profiles of mayors on the board, and a data frame with only persons in top positions on the board.
 
 ```{r subsetting dataframe}
 # Create sub-dataframes
@@ -137,7 +138,7 @@ names(MayorElection) <- gsub("gültigeStimmen 1", "VotesCandidate1", names(Mayor
 names(MayorElection) <- gsub("Stimmen für nicht genannte Bewerber zusammen", "VotesRest", names(MayorElection))
 
 ```
-Aside from the variables included in the data set, we extracted information on Phd titles from the names of the candidates, to include it as a control variable. Addtionally, we created a variable which indicates whether or not the election of the mayor is is . We want to use this variable in subsetting our data set later, as it identifies mayors which could have possibly leveraged their position in a *Sparkassen* board to secure re-election. 
+Aside from the variables included in the data set, we extracted information on PhD titles from the names of the candidates from the variable for candidate's name and created a new variable indicating whether the person has a Dr. title or not; this was necessary in order to merge the *Sparkassen* dataset and the Mayor Election dataset because name and title of board members was collected as two separate variables. Additionally, we created a variable which indicates whether or not the election of the mayor is contested. We want to use this variable in subsetting our data set later, as it identifies mayors which could have possibly leveraged their position in a *Sparkassen* board to secure re-election. 
 
 ```{r additional_variables}
 # Extracting Phd titles
@@ -182,8 +183,24 @@ Merge$bank_name <- as.character(Merge$bank_name)
 Merge$MayorSparkasse <- ifelse(nchar(Merge$bank_name) > 2, 1, 0)
 ```
 
+In order to analyze whether mayors with a board seat in a public savings bank are more likely to be re-elected, we need know whether a mayor was board member in a *Sparkasse*. While we have detailed information about a mayor's profile in the Municipal Election data frame, we lack information about his or her connection to a *Sparkasse*; this information we get from our *Sparkassen* Board Membership dataset. In order to combine this information with the Election dataset, we add a variable to our Election dataset indicating whether the name of election winner is listed in our Board Membership dataset, i.e. if the mayor has a board seat.
 
-# 5. Describing the Data
+```{r Adding variable for Board Membership to Election data frame}
+##: variable for board membership
+MayorElection$SparkassenMember <- is.element(MayorElection$NameCandidate1, 
+                                            unique(SparkassenBoard$NameCandidate1))
+```
+
+However, as we are interested in whether the incumbent (and not the election winner) was holding a board seat, we had to add another variable indicating if the election winner of the previous election (i.e. the incumbent) was a board member.
+
+```{r Adding variable for Board Membership of Incumbent}
+##: variable for board membership of incumbent
+library(DataCombine)
+MayorElection <- slide(MayorElection, Var = "SparkassenMember",
+                       NewVar = "IncumbentSparkassenMember")
+```
+
+# 5. Descriptive Statistics
 
 
 ## 5.1. Sparkassen Dataset
