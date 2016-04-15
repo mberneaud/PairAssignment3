@@ -14,9 +14,8 @@ header-includes:
 # 1. Introduction[^3]
 ```{r setting_chunk_options, include=FALSE}
 knitr::opts_chunk$set(fig.width=8, fig.height=6, fig.path='graphs/',
-                      include = FALSE, warning=FALSE, message=FALSE,
-                      cache = TRUE)
-# Supressed output for any code chunk in the document, so all graphs, tables, 
+                      include = FALSE, warning=FALSE, message=FALSE)
+# Supressed output for any code chunk in the document, so all graphs, tables,
 # etc which need to have the outputs shown should use include = TRUE as an option
 ```
 
@@ -25,14 +24,20 @@ knitr::opts_chunk$set(fig.width=8, fig.height=6, fig.path='graphs/',
 include.packages <- c("dplyr", "ggplot2", "stringr", "readxl", "DataCombine")
   needed.packages <- include.packages[!(include.packages %in% installed.packages()[, "Package"])]
 if(length(needed.packages)) install.packages(needed.packages, repos = "https://cran.uni-muenster.de/")
-  
+
 lapply(include.packages, library, character.only = TRUE)  # loading all packages at once
 ```
 
 ```{r loading_data}
-SparkassenBoard <- read.table("data/BankBoards_Bavaria_RImport.txt", 
-                        sep="\t", header = TRUE, fileEncoding ="UTF-16")
-MayorElection <- read_excel("data/MayorElectionData.xlsx", sheet = "Bgm_OB")
+# Sparkassen Board Membership data
+SparkassenBoard <- read_excel("data/BankBoards_Bavaria_RImport.xlsx",
+                              sheet = "BoardComp")
+## define variable class:
+SparkassenBoard$Incumbent <- as.character(SparkassenBoard$Incumbent)
+
+# Municipal Election data
+MayorElection <- read_excel("data/MayorElectionData.xlsx",
+                            sheet = "Bgm_OB")
 
 ```
 
@@ -53,41 +58,41 @@ Annual information on Board of Directors is hand-collected from savings banks' a
 A database on mayoral elections in Bavaria is available from the state statistical office upon request. It contains data on direct municipal elections between 1948 and 2014. With this database we are covering 79 of the 416 German *Sparkassen* (19%) and 2,099 municipalities (19% of all municipalities in Germany). The data for mayoral elections contains the following variables:
 
 - election date;
-  
+
 - name of election winner and (at least) the first loser;
 
 - party affiliation of candidates;
 
 - vote shares of candidates;
-  
+
 - dummy for competitive elections (at least two candidates);
-  
+
 - dummy for 'first-time mayor';
 
 - number of eligible voters in voting district (size of municipality).
 
-After obtaining the raw data, we cleaned the data set and subsequently created additional variables needed in our analysis. The individual steps taken are outline in the 
+After obtaining the raw data, we cleaned the data set and subsequently created additional variables needed in our analysis. The individual steps taken are outline in the
 
 # 3. Cleaning the Data
 
 ## 3.1 *Sparkassen* Data
-The data we obtained on the *Sparkassen* had really long and unwieldy names, which we changed to make them more manageable. Moreover, we standardized them to follow use underscores to seperate words and use lower case. 
+The data we obtained on the *Sparkassen* had really long and unwieldy names, which we changed to make them more manageable. Moreover, we standardized them to follow use underscores to seperate words and use lower case.
 ```{r renaming_columns}
 oldnames <- c("^name$", "^political...employee$", "^governing...opposition$", "retired.1.yes.",
-              "^Incumbent$", "Name_CountyMunicipality", "Type_CountyMunicipality")
-newnames <- c("name_candidate_1", "political_employee", "governing_opposition", "retired", "incumbent",
-              "name_municipality", "type_county_municipality")
+               "Name_CountyMunicipality", "Type_CountyMunicipality")
+newnames <- c("NameCandidate1", "political_employee", "governing_opposition", "retired",
+              "NameMunicipality", "type_county_municipality")
 for (i in seq_along(oldnames)) {
   names(SparkassenBoard) <- gsub(oldnames[i], newnames[i], names(SparkassenBoard))
 }
 
 ```
 
-The strings containing the municipality names and the names of mayor candidates contained unnecessary whitespace which we trimmed using the str_trim function from the stringr package. 
+The strings containing the municipality names and the names of mayor candidates contained unnecessary whitespace which we trimmed using the str_trim function from the stringr package.
 
 ```{r trimming_whitespace}
-SparkassenBoard$name_municipality <- str_trim(SparkassenBoard$name_municipality)
-SparkassenBoard$name_candidate_1 <- str_trim(SparkassenBoard$name_candidate_1)
+SparkassenBoard$NameMunicipality <- str_trim(SparkassenBoard$NameMunicipality)
+SparkassenBoard$NameCandidate1 <- str_trim(SparkassenBoard$NameCandidate1)
 ```
 
 Furthermore, we created an additional variable for top positions in *Sparkassen* boards. The raw data includes information on the position of the respective person (normal board member, vice chairman or chairman); since chairmen and vice chairmen alternate over the years in Bavarian savings banks, there is no difference between chairmen and vice chairmen in reality and they can be amalgamated into one category (*top position*).
@@ -99,22 +104,22 @@ SparkassenBoard$TopPosition <- as.character(SparkassenBoard$TopPosition)
 
 ```
 
-Finally, we created three sub-data frames by subsetting the initial dataframe in order to analyze different aspects of *Sparkassen* boards in greater detail. Hence, we created a subset containing unique board member profiles, another one with unique profiles of mayors on the board, and a data frame with only persons in top positions on the board.
+Finally, we created four sub-data frames by subsetting the initial dataframe in order to analyze different aspects of *Sparkassen* boards in greater detail. Hence, we created a subset containing unique board member profiles, another one with unique profiles of mayors on the board, a data frame with only persons in top positions on the board, and a data frame with unique banks.
 
 ```{r subsetting dataframe}
 # Create sub-dataframes
+## :unique banks
+SparkassenBoard_UniqueBanks <- unique(SparkassenBoard[,c("bank_ID", "bank_name", "federal_state", "city", "board_size")])
 ## :unique board members
-SparkassenBoard_UniqueMembers <- unique(SparkassenBoard[,c("name_candidate_1", "occupation", "incumbent", "TopPosition",
-                                      "name_municipality")])
+SparkassenBoard_UniqueMembers <- unique(SparkassenBoard[,c("NameCandidate1", "occupation", "Incumbent", "NameMunicipality")])
 ## :mayors at board
-SparkassenBoard_UniqueBoardMayors <- subset(SparkassenBoard_UniqueMembers, incumbent == "1")
+SparkassenBoard_UniqueBoardMayors <- subset(SparkassenBoard_UniqueMembers, Incumbent == "1")
 ## :Top Positions only
 SparkassenBoard_TopPositions <- subset(SparkassenBoard, TopPosition == 1)
-
 ```
 
 ## 3.2 Creating Additional Variables
-In addition to the variables available in the data set already, we created variables (1) distinguishing 'first time mayors', (2) identifying competitive elections where there were more than one candidate, (3) the number of times a single mayor was elected, which allowed us to identify mayor's first re-election. This last point is important because our research is interested in the first re-election of mayors specifically. 
+In addition to the variables available in the data set already, we created variables (1) distinguishing 'first time mayors', (2) identifying competitive elections where there were more than one candidate, (3) the number of times a single mayor was elected, which allowed us to identify mayor's first re-election. This last point is important because our research is interested in the first re-election of mayors specifically.
 
 ## 3.3 Municipal Election Data
 The municipal election data as provided by the Bavarian Statistical Service was provided as an Excel worksheet, which also meant that the columns where named in a way which was not computer-readable. As a result, we had to clean the names of the data set almost entirely. Aside from containing spaces, they also frequently contained line breaks and carriage returns.
@@ -138,7 +143,7 @@ names(MayorElection) <- gsub("gültigeStimmen 1", "VotesCandidate1", names(Mayor
 names(MayorElection) <- gsub("Stimmen für nicht genannte Bewerber zusammen", "VotesRest", names(MayorElection))
 
 ```
-Aside from the variables included in the data set, we extracted information on PhD titles from the names of the candidates from the variable for candidate's name and created a new variable indicating whether the person has a Dr. title or not; this was necessary in order to merge the *Sparkassen* dataset and the Mayor Election dataset because name and title of board members was collected as two separate variables. Additionally, we created a variable which indicates whether or not the election of the mayor is contested. We want to use this variable in subsetting our data set later, as it identifies mayors which could have possibly leveraged their position in a *Sparkassen* board to secure re-election. 
+Aside from the variables included in the data set, we extracted information on PhD titles from the names of the candidates from the variable for candidate's name and created a new variable indicating whether the person has a Dr. title or not; this was necessary in order to merge the *Sparkassen* dataset and the Mayor Election dataset because name and title of board members was collected as two separate variables. Additionally, we created a variable which indicates whether or not the election of the mayor is contested. We want to use this variable in subsetting our data set later, as it identifies mayors which could have possibly leveraged their position in a *Sparkassen* board to secure re-election.
 
 ```{r additional_variables}
 # Extracting Phd titles
@@ -171,22 +176,11 @@ MayorElection$Year <- strtrim(MayorElection$ElectionDate, 4L)
 
 # 4. Merging the Data
 
-```{r merging_data_sets}
-# Merging the data sets
-Merge <- merge(MayorElection, SparkassenBoard, by.x = c("NameCandidate1", "Year"),
-               by.y = c("name_candidate_1", "year"), all.x = TRUE)
-
-# creating a dummy which indicates if a mayor had been a member of the board of his local Sparkasse in the election year
-# coercing factor to characters in variable used to identify mayors
-Merge$bank_name <- as.character(Merge$bank_name)
-Merge$MayorSparkasse <- ifelse(nchar(Merge$bank_name) > 2, 1, 0)
-```
-
 In order to analyze whether mayors with a board seat in a public savings bank are more likely to be re-elected, we need know whether a mayor was board member in a *Sparkasse*. While we have detailed information about a mayor's profile in the Municipal Election data frame, we lack information about his or her connection to a *Sparkasse*; this information we get from our *Sparkassen* Board Membership dataset. In order to combine this information with the Election dataset, we add a variable to our Election dataset indicating whether the name of election winner is listed in our Board Membership dataset, i.e. if the mayor has a board seat[^1].
 
 ```{r Adding variable for Board Membership to Election data frame}
 ##: variable for board membership
-MayorElection$SparkassenMember <- is.element(MayorElection$NameCandidate1, 
+MayorElection$SparkassenMember <- is.element(MayorElection$NameCandidate1,
                                             unique(SparkassenBoard$NameCandidate1))
 ```
 
@@ -204,7 +198,7 @@ MayorElection <- slide(MayorElection, Var = "SparkassenMember",
 
 ## 5.1. Sparkassen Dataset
 ```{r sparkassen_top_positions, include=TRUE, echo=FALSE, fig.height=8, fig.width=10}
-ggplot(SparkassenBoard, aes(TopPosition, frequency(TopPosition))) + 
+ggplot(SparkassenBoard, aes(TopPosition, frequency(TopPosition))) +
   geom_bar(stat = "identity") +
   xlab("") +
   ylab("Number of Seats") +
@@ -212,43 +206,79 @@ ggplot(SparkassenBoard, aes(TopPosition, frequency(TopPosition))) +
 ```
 
 ```{r politicians_in_Sparkassen_board, include=TRUE, echo=FALSE, fig.height=8, fig.width=10}
-barplot(table(SparkassenBoard_TopPositions$incumbent),
+barplot(table(SparkassenBoard_TopPositions$Incumbent),
         main = "Share of Politicians in Top Positions on Bank Board",
         names.arg = c("Non-Political", "Mayor", "Landrat"),
         ylab = "Board Members in Top Positions")
 
 ```
 
+As outlined above, the *Sparkassen* dataset contains information on names, political position (no full-time politician; mayor; county commissioner) and position within the board (top position; non-top position). This allows us the estimate the degree of politicization of boards and the patterns of politicization.
 
-```{r top_positions_vs_entire_board, }
-ggplot(SparkassenBoard, aes(TopPosition, frequency, fill = incumbent)) +
+The Board Membership dataset contains 79 banks. Board size varies between a maximum of 32 board seats and a minimum of six seats; on average (median), Bavarian savings banks have 12 persons on the supervisory board.
+
+```{r Basic summary statistics for banks}
+# DESCRIPTIVE STATISTICS: BANKS
+
+## Number of Banks in Bank dataframe
+length(unique(SparkassenBoard[,c("bank_name")])) # 79 banks in Database
+
+## Board Size
+summary(SparkassenBoard_UniqueBanks$board_size) # max: 32 seats, min: 6 seats, average (median): 12 seats
+```
+```{r Boxplot: Size of Boards}
+ggplot(SparkassenBoard_UniqueBanks, aes(x = 1, y = board_size)) +
+  geom_boxplot() +
+  ggtitle("Size of Bank Board") +
+  xlab("") +
+  ylab("Number of Board Members")
+```
+
+For those 79 banks, we have overall almost 9,000 board member-year observations, about 1,600 unique board member profiles of which 410 are mayors (23%) and 175 are county commissioners (11%).
+
+```{r Basic summary statistics board member profiles}
+# DESCRIPTIVE STATISTICS: BOARD MEMBERS
+
+## Number of name-year combinations
+length(SparkassenBoard$NameCandidate1) #8974 name-year combinations
+
+## Number of Profiles in Board dataframe
+length(unique(SparkassenBoard[,c("NameCandidate1")])) # 1,663 unique profiles in dataframe
+
+## Number and Share of Prof. Politicians in Board Dataframe
+table(unique(SparkassenBoard[,c("NameCandidate1", "Incumbent")])$Incumbent) # 410 mayors; 174 Landräte; 1,157 others
+
+prop.table(table(SparkassenBoard$Incumbent)) # 23% mayors; 11% Landrat; 65% others
+```
+
+Of the 9,000 board member-year observations, about one-fourth (2,115 observations) are member-year observations for board members in top positions. Of those 2,115 observations, 875 are mayors and 1,006 are county commissioners; only 238 top-position observations belong to persons that are not full-time politicians.
+
+```{r Comparison: Board Members in Entire board and Top Positions, include=TRUE, echo= FALSE}
+### Comparison: Board Members in Top Positions and Entire Board
+ggplot(SparkassenBoard, aes(TopPosition, frequency, fill = Incumbent)) +
   geom_bar(aes(y = (..count..)), position=position_dodge(), width=1) +
   xlab("") +
   scale_x_discrete(limit= c("0", "1"),
-                   labels=c("Non-Top ```{r graphs_election_dataset}
-MayorElection$Geschlecht1 <- str_trim(MayorElection$Geschlecht1)
-
-
-
-```Positions", "Top Positions")) +
-  ylab("Number of Board Members") +
+                   labels=c("Non-Top Positions", "Top Positions")) +
+  ylab("No. Member-Year Observations") +
+  theme_bw() +
   theme(legend.position = "bottom") +
   scale_fill_discrete(name="Political Position",
                       breaks=c("0", "1", "2"),
                       labels=c("No Full-Time Politician", "Mayor", "County Commissioner"))
 ```
 
-As outlined above, the *Sparkassen* dataset contains information on names, political position (no full-time politician; mayor; county commissioner) and position within the board (top position; non-top position). This allows us the estimate the degree of politicization of boards and the patterns of politicization.
+Overall, this shows that a considerable share of bank boards is hold by full-time politicians (34%). Moreover, political representation is pronounced in top positions of banks' boards (county commissioners are only in top positions); as board seat holders of top positions have much higher influence on banks' strategic decisions (e.g. as the chairman is always member of the credit committee), this finding confirms our suspicion that German *Sparkassen* are subject to potentially high political control and shows that politicization of public savings banks mainly works through top positions.
 
 ## 5.2. Election Data Set
-The entire cleaned data set contains data on 30973 municipal mayor elections, which occurred in between 1933 and 2016. It contains data on the election in general, such as the election date, the name of the municipality, the number of valid and invalid ballots and whether a run-off was necessary. Moreover, it contains the following data on mayoral candidates:  the names of the winning candidates, as well as their party afiliations, year of birth and gender. Additionally, the names of all runner ups are listed as well as the combined number of votes for all candidates who did not win the race. 
+The entire cleaned data set contains data on 30973 municipal mayor elections, which occurred in between 1933 and 2016. It contains data on the election in general, such as the election date, the name of the municipality, the number of valid and invalid ballots and whether a run-off was necessary. Moreover, it contains the following data on mayoral candidates:  the names of the winning candidates, as well as their party afiliations, year of birth and gender. Additionally, the names of all runner ups are listed as well as the combined number of votes for all candidates who did not win the race.
 ```{r graphs_election_dataset, include=TRUE, echo=FALSE}
  MayorElection$Geschlecht1 <- str_trim(MayorElection$Geschlecht1)
 
-# cleaning of party names 
+# cleaning of party names
 MayorElection$MayorParty <- MayorElection$"Wahlvorschlag 1"
 MayorElection$MayorParty <- str_trim(MayorElection$MayorParty)
-# 
+#
 # for(i in 1:nrow(MayorElection)) {
 #   if(MayorElection$MayorParty[i] == "NA") {
 #     next
@@ -266,14 +296,14 @@ MayorElection$MayorParty <- str_trim(MayorElection$MayorParty)
 #     MayorElection$MayorParty[i] <- "Free Voters"
 #   }
 # }
-# 
-# 
+#
+#
 # barplot(table(MayorElection$"Wahlvorschlag 1"))
 ```
 
 
 
-Out of all the mayors elected over the entire time period, `r round((table(MayorElection$Geschlecht1)[2] / nrow(MayorElection))*100, 3)`% of the mayors who were elected were female. 
+Out of all the mayors elected over the entire time period, `r round((table(MayorElection$Geschlecht1)[2] / nrow(MayorElection))*100, 3)`% of the mayors who were elected were female.
 
 
 

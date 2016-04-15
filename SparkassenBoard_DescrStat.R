@@ -22,6 +22,12 @@ length(unique(SparkassenBoard[,c("bank_name")])) # 79 banks in Database
 ## Board Size
 summary(SparkassenBoard_UniqueBanks$board_size) # max: 32 seats, min: 6 seats, average (median): 12 seats
 
+ggplot(SparkassenBoard_UniqueBanks, aes(x = 1, y = board_size)) +
+  geom_boxplot() +
+  ggtitle("Size of Bank Board")
+  xlab("") +
+  ylab("Number of Board Members")
+
 # DESCRIPTIVE STATISTICS: BOARD MEMBERS
 
 ## Number of name-year combinations
@@ -67,7 +73,7 @@ ggplot(SparkassenBoard, aes(TopPosition, frequency, fill = Incumbent)) +
   xlab("") +
   scale_x_discrete(limit= c("0", "1"),
                    labels=c("Non-Top Positions", "Top Positions")) +
-  ylab("Number of Board Members") +
+  ylab("No. Member-Year Observations") +
   theme_bw() +
   theme(legend.position = "bottom") +
   scale_fill_discrete(name="Political Position",
