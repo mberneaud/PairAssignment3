@@ -31,13 +31,14 @@ lapply(include.packages, library, character.only = TRUE)  # loading all packages
 
 ```{r loading_data}
 # Sparkassen Board Membership data
-SparkassenBoard <- read.table("data/BankBoards_Bavaria_RImport.txt", 
-                        sep="\t", header = TRUE, fileEncoding ="UTF-16")
+SparkassenBoard <- read_excel("data/BankBoards_Bavaria_RImport.xlsx", 
+                              sheet = "BoardComp")
 ## define variable class:
 SparkassenBoard$Incumbent <- as.character(SparkassenBoard$Incumbent)
 
 # Municipal Election data
-MayorElection <- read_excel("data/MayorElectionData.xlsx", sheet = "Bgm_OB")
+MayorElection <- read_excel("data/MayorElectionData.xlsx", 
+                            sheet = "Bgm_OB")
 
 ```
 
@@ -79,9 +80,9 @@ After obtaining the raw data, we cleaned the data set and subsequently created a
 The data we obtained on the *Sparkassen* had really long and unwieldy names, which we changed to make them more manageable. Moreover, we standardized them to follow use underscores to seperate words and use lower case. 
 ```{r renaming_columns}
 oldnames <- c("^name$", "^political...employee$", "^governing...opposition$", "retired.1.yes.",
-              "^Incumbent$", "Name_CountyMunicipality", "Type_CountyMunicipality")
-newnames <- c("name_candidate_1", "political_employee", "governing_opposition", "retired", "incumbent",
-              "name_municipality", "type_county_municipality")
+               "Name_CountyMunicipality", "Type_CountyMunicipality")
+newnames <- c("NameCandidate1", "political_employee", "governing_opposition", "retired",
+              "NameMunicipality", "type_county_municipality")
 for (i in seq_along(oldnames)) {
   names(SparkassenBoard) <- gsub(oldnames[i], newnames[i], names(SparkassenBoard))
 }
@@ -91,8 +92,8 @@ for (i in seq_along(oldnames)) {
 The strings containing the municipality names and the names of mayor candidates contained unnecessary whitespace which we trimmed using the str_trim function from the stringr package. 
 
 ```{r trimming_whitespace}
-SparkassenBoard$name_municipality <- str_trim(SparkassenBoard$name_municipality)
-SparkassenBoard$name_candidate_1 <- str_trim(SparkassenBoard$name_candidate_1)
+SparkassenBoard$NameMunicipality <- str_trim(SparkassenBoard$NameMunicipality)
+SparkassenBoard$NameCandidate1 <- str_trim(SparkassenBoard$NameCandidate1)
 ```
 
 Furthermore, we created an additional variable for top positions in *Sparkassen* boards. The raw data includes information on the position of the respective person (normal board member, vice chairman or chairman); since chairmen and vice chairmen alternate over the years in Bavarian savings banks, there is no difference between chairmen and vice chairmen in reality and they can be amalgamated into one category (*top position*).
@@ -104,18 +105,18 @@ SparkassenBoard$TopPosition <- as.character(SparkassenBoard$TopPosition)
 
 ```
 
-Finally, we created three sub-data frames by subsetting the initial dataframe in order to analyze different aspects of *Sparkassen* boards in greater detail. Hence, we created a subset containing unique board member profiles, another one with unique profiles of mayors on the board, and a data frame with only persons in top positions on the board.
+Finally, we created four sub-data frames by subsetting the initial dataframe in order to analyze different aspects of *Sparkassen* boards in greater detail. Hence, we created a subset containing unique board member profiles, another one with unique profiles of mayors on the board, a data frame with only persons in top positions on the board, and a data frame with unique banks.
 
 ```{r subsetting dataframe}
 # Create sub-dataframes
+## :unique banks
+SparkassenBoard_UniqueBanks <- unique(SparkassenBoard[,c("bank_ID", "bank_name", "federal_state", "city", "board_size")])
 ## :unique board members
-SparkassenBoard_UniqueMembers <- unique(SparkassenBoard[,c("name_candidate_1", "occupation", "incumbent", "TopPosition",
-                                      "name_municipality")])
+SparkassenBoard_UniqueMembers <- unique(SparkassenBoard[,c("NameCandidate1", "occupation", "Incumbent", "NameMunicipality")])
 ## :mayors at board
-SparkassenBoard_UniqueBoardMayors <- subset(SparkassenBoard_UniqueMembers, incumbent == "1")
+SparkassenBoard_UniqueBoardMayors <- subset(SparkassenBoard_UniqueMembers, Incumbent == "1")
 ## :Top Positions only
 SparkassenBoard_TopPositions <- subset(SparkassenBoard, TopPosition == 1)
-
 ```
 
 ## 3.2 Creating Additional Variables
@@ -177,17 +178,6 @@ MayorElection$Year <- strtrim(MayorElection$ElectionDate, 4L)
 # 4. Merging the Data
 As we want to conduct our analysis on the mayor-election level, the data set was merged on the names of the mayors and years. 
 
-```{r merging_data_sets}
-# Merging the data sets
-Merge <- merge(MayorElection, SparkassenBoard, by.x = c("NameCandidate1", "Year"),
-               by.y = c("name_candidate_1", "year"), all.x = TRUE)
-
-# creating a dummy which indicates if a mayor had been a member of the board of his local Sparkasse in the election year
-# coercing factor to characters in variable used to identify mayors
-Merge$bank_name <- as.character(Merge$bank_name)
-Merge$MayorSparkasse <- ifelse(nchar(Merge$bank_name) > 2, 1, 0)
-```
-
 In order to analyze whether mayors with a board seat in a public savings bank are more likely to be re-elected, we need know whether a mayor was board member in a *Sparkasse*. While we have detailed information about a mayor's profile in the Municipal Election data frame, we lack information about his or her connection to a *Sparkasse*; this information we get from our *Sparkassen* Board Membership dataset. In order to combine this information with the Election dataset, we add a variable to our Election dataset indicating whether the name of election winner is listed in our Board Membership dataset, i.e. if the mayor has a board seat[^1].
 
 ```{r Adding variable for Board Membership to Election data frame}
@@ -218,7 +208,7 @@ ggplot(SparkassenBoard, aes(TopPosition, frequency(TopPosition))) +
 ```
 
 ```{r politicians_in_Sparkassen_board, include=TRUE, echo=FALSE, fig.height=8, fig.width=10}
-barplot(table(SparkassenBoard_TopPositions$incumbent),
+barplot(table(SparkassenBoard_TopPositions$Incumbent),
         main = "Share of Politicians in Top Positions on Bank Board",
         names.arg = c("Non-Political", "Mayor", "Landrat"),
         ylab = "Board Members in Top Positions")
@@ -241,7 +231,7 @@ summary(SparkassenBoard_UniqueBanks$board_size) # max: 32 seats, min: 6 seats, a
 ```{r Boxplot: Size of Boards}
 ggplot(SparkassenBoard_UniqueBanks, aes(x = 1, y = board_size)) +
   geom_boxplot() +
-  ggtitle("Size of Bank Board")
+  ggtitle("Size of Bank Board") +
   xlab("") +
   ylab("Number of Board Members")
 ```
@@ -281,7 +271,6 @@ ggplot(SparkassenBoard, aes(TopPosition, frequency, fill = Incumbent)) +
 ```
 
 Overall, this shows that a considerable share of bank boards is hold by full-time politicians (34%). Moreover, political representation is pronounced in top positions of banks' boards (county commissioners are only in top positions); as board seat holders of top positions have much higher influence on banks' strategic decisions (e.g. as the chairman is always member of the credit committee), this finding confirms our suspicion that German *Sparkassen* are subject to potentially high political control and shows that politicization of public savings banks mainly works through top positions.
-
 
 ## 5.2. Election Dataset
 
