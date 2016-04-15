@@ -195,7 +195,7 @@ However, as we are interested in whether the incumbent (and not the election win
 
 ```{r Adding variable for Board Membership of Incumbent}
 ##: variable for board membership of incumbent
-library(DataCombine)
+#library(DataCombine) # I moved the loading of the library up in the initiatl code which checks whether all necessary packages are installed, installs missings and then load them (named: "fetching_library") (MB)
 MayorElection <- slide(MayorElection, Var = "SparkassenMember",
                        NewVar = "IncumbentSparkassenMember")
 ```
