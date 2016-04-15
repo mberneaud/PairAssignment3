@@ -170,7 +170,6 @@ MayorElection$Year <- strtrim(MayorElection$ElectionDate, 4L)
 ```
 
 # 4. Merging the Data
-As we want to conduct our analysis on the mayor-election level, the data set was merged on the names of the mayors and years. 
 
 ```{r merging_data_sets}
 # Merging the data sets
@@ -226,7 +225,12 @@ ggplot(SparkassenBoard, aes(TopPosition, frequency, fill = incumbent)) +
   geom_bar(aes(y = (..count..)), position=position_dodge(), width=1) +
   xlab("") +
   scale_x_discrete(limit= c("0", "1"),
-                   labels=c("Non-Top Positions", "Top Positions")) +
+                   labels=c("Non-Top ```{r graphs_election_dataset}
+MayorElection$Geschlecht1 <- str_trim(MayorElection$Geschlecht1)
+
+
+
+```Positions", "Top Positions")) +
   ylab("Number of Board Members") +
   theme(legend.position = "bottom") +
   scale_fill_discrete(name="Political Position",
@@ -236,7 +240,42 @@ ggplot(SparkassenBoard, aes(TopPosition, frequency, fill = incumbent)) +
 
 As outlined above, the *Sparkassen* dataset contains information on names, political position (no full-time politician; mayor; county commissioner) and position within the board (top position; non-top position). This allows us the estimate the degree of politicization of boards and the patterns of politicization.
 
-## 5.2. Election Dataset
+## 5.2. Election Data Set
+The entire cleaned data set contains data on 30973 municipal mayor elections, which occurred in between 1933 and 2016. It contains data on the election in general, such as the election date, the name of the municipality, the number of valid and invalid ballots and whether a run-off was necessary. Moreover, it contains the following data on mayoral candidates:  the names of the winning candidates, as well as their party afiliations, year of birth and gender. Additionally, the names of all runner ups are listed as well as the combined number of votes for all candidates who did not win the race. 
+```{r graphs_election_dataset, include=TRUE, echo=FALSE}
+ MayorElection$Geschlecht1 <- str_trim(MayorElection$Geschlecht1)
+
+# cleaning of party names 
+MayorElection$MayorParty <- MayorElection$"Wahlvorschlag 1"
+MayorElection$MayorParty <- str_trim(MayorElection$MayorParty)
+# 
+# for(i in 1:nrow(MayorElection)) {
+#   if(MayorElection$MayorParty[i] == "NA") {
+#     next
+#   }
+#   if(MayorElection$MayorParty[i] == "CSU") {
+#     next
+#   }
+#   if(MayorElection$MayorParty[i] == "CSU/BU") {
+#     next
+#   }
+#   if(MayorElection$MayorParty[i] == "PWG") {
+#     next
+#   }
+#   if(grepl("Wähler", MayorElection$MayorParty[i])) {
+#     MayorElection$MayorParty[i] <- "Free Voters"
+#   }
+# }
+# 
+# 
+# barplot(table(MayorElection$"Wahlvorschlag 1"))
+```
+
+
+
+Out of all the mayors elected over the entire time period, `r round((table(MayorElection$Geschlecht1)[2] / nrow(MayorElection))*100, 3)`% of the mayors who were elected were female. 
+
+
 
 ## 5.3. Merged Dataset
 
