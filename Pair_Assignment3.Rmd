@@ -1,14 +1,14 @@
 ---
 title: 'Pair Assignment 3: Gathering, Cleaning, Merging and Exploring our Data'
-subtitle: "Course: Introduction to Collaborative Social Science Data Analysis"
 author: |
   | Malte Berneaud-Kötz & Jonas Markgraf
   | Hertie School of Governance
-date:         "14 April 2016"
-output:       pdf_document
+date: "14 April 2016"
+output: pdf_document
+subtitle: 'Course: Introduction to Collaborative Social Science Data Analysis'
 header-includes:
-  - \usepackage{setspace}
-  - \doublespacing
+- \usepackage{setspace}
+- \doublespacing
 ---
 
 # 1. Introduction[^3]
@@ -22,7 +22,7 @@ knitr::opts_chunk$set(fig.width=8, fig.height=6, fig.path='graphs/',
 
 ```{r fetching_packages}
  # Packages needed for the execution of this Rmd are listed in include.packages and checked against the installed packages on the machine executing the code. If they are not installed, they will be installed automatically.
-include.packages <- c("dplyr", "ggplot2", "stringr", "readxl")
+include.packages <- c("dplyr", "ggplot2", "stringr", "readxl", "DataCombine")
   needed.packages <- include.packages[!(include.packages %in% installed.packages()[, "Package"])]
 if(length(needed.packages)) install.packages(needed.packages, repos = "https://cran.uni-muenster.de/")
   
@@ -38,7 +38,7 @@ MayorElection <- read_excel("data/MayorElectionData.xlsx", sheet = "Bgm_OB")
 
 # 2. Gathering the Data
 
-## 2.1 Bank Board Data
+## 2.1 *Sparkassen* Board Membership Data
 We hand-collect a unique panel dataset on the composition of Boards of Directors in Bavaria's *Sparkassen*. This dataset includes detailed information on board member profiles which enables us to identify mayors on bank boards:
 
 - name of board members;
@@ -183,7 +183,7 @@ Merge$bank_name <- as.character(Merge$bank_name)
 Merge$MayorSparkasse <- ifelse(nchar(Merge$bank_name) > 2, 1, 0)
 ```
 
-In order to analyze whether mayors with a board seat in a public savings bank are more likely to be re-elected, we need know whether a mayor was board member in a *Sparkasse*. While we have detailed information about a mayor's profile in the Municipal Election data frame, we lack information about his or her connection to a *Sparkasse*; this information we get from our *Sparkassen* Board Membership dataset. In order to combine this information with the Election dataset, we add a variable to our Election dataset indicating whether the name of election winner is listed in our Board Membership dataset, i.e. if the mayor has a board seat.
+In order to analyze whether mayors with a board seat in a public savings bank are more likely to be re-elected, we need know whether a mayor was board member in a *Sparkasse*. While we have detailed information about a mayor's profile in the Municipal Election data frame, we lack information about his or her connection to a *Sparkasse*; this information we get from our *Sparkassen* Board Membership dataset. In order to combine this information with the Election dataset, we add a variable to our Election dataset indicating whether the name of election winner is listed in our Board Membership dataset, i.e. if the mayor has a board seat[^1].
 
 ```{r Adding variable for Board Membership to Election data frame}
 ##: variable for board membership
@@ -234,10 +234,14 @@ ggplot(SparkassenBoard, aes(TopPosition, frequency, fill = incumbent)) +
                       labels=c("No Full-Time Politician", "Mayor", "County Commissioner"))
 ```
 
+As outlined above, the *Sparkassen* dataset contains information on names, political position (no full-time politician; mayor; county commissioner) and position within the board (top position; non-top position). This allows us the estimate the degree of politicization of boards and the patterns of politicization.
+
 ## 5.2. Election Dataset
 
 ## 5.3. Merged Dataset
 
 # 6. First Inferences
+
+[^1]: As the focus of this paper is the analysis of the electoral effect of board membership, we focus on the re-election chances of mayors with board membership in a *Sparkasse* compared to those without a board seat. A closer examination of the patterns of politicization of banks' boards, such as partisanship within boards, is therefore not conducted and goes beyond the scope of this paper. Future steps of the PhD research project will, however, analyze those patterns.
 
 [^3]: This paper is based on and a part of a research project by Guillermo Rosas (Washington University in St. Louis; grosas@wustl.edu) and Jonas Markgraf (Hertie School of Governance; markgraf@hertie-school.org).
