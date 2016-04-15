@@ -168,8 +168,24 @@ MayorElection <- merge(MayorElection, tally)
 
 # 4. Merging the Data
 
+In order to analyze whether mayors with a board seat in a public savings bank are more likely to be re-elected, we need know whether a mayor was board member in a *Sparkasse*. While we have detailed information about a mayor's profile in the Municipal Election data frame, we lack information about his or her connection to a *Sparkasse*; this information we get from our *Sparkassen* Board Membership dataset. In order to combine this information with the Election dataset, we add a variable to our Election dataset indicating whether the name of election winner is listed in our Board Membership dataset, i.e. if the mayor has a board seat.
 
-# 5. Describing the Data
+```{r Adding variable for Board Membership to Election data frame}
+##: variable for board membership
+MayorElection$SparkassenMember <- is.element(MayorElection$NameCandidate1, 
+                                            unique(SparkassenBoard$NameCandidate1))
+```
+
+However, as we are interested in whether the incumbent (and not the election winner) was holding a board seat, we had to add another variable indicating if the election winner of the previous election (i.e. the incumbent) was a board member.
+
+```{r Adding variable for Board Membership of Incumbent}
+##: variable for board membership of incumbent
+library(DataCombine)
+MayorElection <- slide(MayorElection, Var = "SparkassenMember",
+                       NewVar = "IncumbentSparkassenMember")
+```
+
+# 5. Descriptive Statistics
 
 ## 5.1. Sparkassen Dataset
 
