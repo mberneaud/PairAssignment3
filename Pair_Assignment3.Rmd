@@ -13,8 +13,9 @@ header-includes:
 
 # 1. Introduction[^3]
 ```{r setting_chunk_options, include=FALSE}
-knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='graphs/',
-                      include = FALSE, warning=FALSE, message=FALSE)
+knitr::opts_chunk$set(fig.width=8, fig.height=6, fig.path='graphs/',
+                      include = FALSE, warning=FALSE, message=FALSE,
+                      cache = TRUE)
 # Supressed output for any code chunk in the document, so all graphs, tables, 
 # etc which need to have the outputs shown should use include = TRUE as an option
 ```
@@ -155,22 +156,66 @@ for(i in 2:nrow(MayorElection)) {
   }
 }
 
-
 # creating the total number of terms for each mayor
 tally <- dplyr::tally(group_by(MayorElection, NameCandidate1))
 names(tally)[2] <- "TotalTerms"
 #merging that back into the data frame
 MayorElection <- merge(MayorElection, tally)
 
+# Extracting years from the election date character string
+MayorElection$Year <- strtrim(MayorElection$ElectionDate, 4L)
+
 # TODO: creating variable indicating number of terms
 ```
 
 # 4. Merging the Data
+As we want to conduct our analysis on the mayor-election level, the data set was merged on the names of the mayors and years. 
+
+```{r merging_data_sets}
+# Merging the data sets
+Merge <- merge(MayorElection, SparkassenBoard, by.x = c("NameCandidate1", "Year"),
+               by.y = c("name_candidate_1", "year"), all.x = TRUE)
+
+# creating a dummy which indicates if a mayor had been a member of the board of his local Sparkasse in the election year
+# coercing factor to characters in variable used to identify mayors
+Merge$bank_name <- as.character(Merge$bank_name)
+Merge$MayorSparkasse <- ifelse(nchar(Merge$bank_name) > 2, 1, 0)
+```
 
 
 # 5. Describing the Data
 
+
 ## 5.1. Sparkassen Dataset
+```{r sparkassen_top_positions, include=TRUE, echo=FALSE, fig.height=8, fig.width=10}
+ggplot(SparkassenBoard, aes(TopPosition, frequency(TopPosition))) + 
+  geom_bar(stat = "identity") +
+  xlab("") +
+  ylab("Number of Seats") +
+  ggtitle("Number of Top Positions in Boards")
+```
+
+```{r politicians_in_Sparkassen_board, include=TRUE, echo=FALSE, fig.height=8, fig.width=10}
+barplot(table(SparkassenBoard_TopPositions$incumbent),
+        main = "Share of Politicians in Top Positions on Bank Board",
+        names.arg = c("Non-Political", "Mayor", "Landrat"),
+        ylab = "Board Members in Top Positions")
+
+```
+
+
+```{r top_positions_vs_entire_board, }
+ggplot(SparkassenBoard, aes(TopPosition, frequency, fill = incumbent)) +
+  geom_bar(aes(y = (..count..)), position=position_dodge(), width=1) +
+  xlab("") +
+  scale_x_discrete(limit= c("0", "1"),
+                   labels=c("Non-Top Positions", "Top Positions")) +
+  ylab("Number of Board Members") +
+  theme(legend.position = "bottom") +
+  scale_fill_discrete(name="Political Position",
+                      breaks=c("0", "1", "2"),
+                      labels=c("No Full-Time Politician", "Mayor", "County Commissioner"))
+```
 
 ## 5.2. Election Dataset
 
