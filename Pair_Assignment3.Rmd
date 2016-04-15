@@ -30,8 +30,13 @@ lapply(include.packages, library, character.only = TRUE)  # loading all packages
 ```
 
 ```{r loading_data}
+# Sparkassen Board Membership data
 SparkassenBoard <- read.table("data/BankBoards_Bavaria_RImport.txt", 
                         sep="\t", header = TRUE, fileEncoding ="UTF-16")
+## define variable class:
+SparkassenBoard$Incumbent <- as.character(SparkassenBoard$Incumbent)
+
+# Municipal Election data
 MayorElection <- read_excel("data/MayorElectionData.xlsx", sheet = "Bgm_OB")
 
 ```
@@ -220,21 +225,63 @@ barplot(table(SparkassenBoard_TopPositions$incumbent),
 
 ```
 
+As outlined above, the *Sparkassen* dataset contains information on names, political position (no full-time politician; mayor; county commissioner) and position within the board (top position; non-top position). This allows us the estimate the degree of politicization of boards and the patterns of politicization.
 
-```{r top_positions_vs_entire_board, }
-ggplot(SparkassenBoard, aes(TopPosition, frequency, fill = incumbent)) +
+The Board Membership dataset contains 79 banks. Board size varies between a maximum of 32 board seats and a minimum of six seats; on average (median), Bavarian savings banks have 12 persons on the supervisory board.
+
+```{r Basic summary statistics for banks}
+# DESCRIPTIVE STATISTICS: BANKS
+
+## Number of Banks in Bank dataframe
+length(unique(SparkassenBoard[,c("bank_name")])) # 79 banks in Database
+
+## Board Size
+summary(SparkassenBoard_UniqueBanks$board_size) # max: 32 seats, min: 6 seats, average (median): 12 seats
+```
+```{r Boxplot: Size of Boards}
+ggplot(SparkassenBoard_UniqueBanks, aes(x = 1, y = board_size)) +
+  geom_boxplot() +
+  ggtitle("Size of Bank Board")
+  xlab("") +
+  ylab("Number of Board Members")
+```
+
+For those 79 banks, we have overall almost 9,000 board member-year observations, about 1,600 unique board member profiles of which 410 are mayors (23%) and 175 are county commissioners (11%).
+
+```{r Basic summary statistics board member profiles}
+# DESCRIPTIVE STATISTICS: BOARD MEMBERS
+
+## Number of name-year combinations
+length(SparkassenBoard$NameCandidate1) #8974 name-year combinations
+
+## Number of Profiles in Board dataframe
+length(unique(SparkassenBoard[,c("NameCandidate1")])) # 1,663 unique profiles in dataframe
+
+## Number and Share of Prof. Politicians in Board Dataframe
+table(unique(SparkassenBoard[,c("NameCandidate1", "Incumbent")])$Incumbent) # 410 mayors; 174 Landräte; 1,157 others
+
+prop.table(table(SparkassenBoard$Incumbent)) # 23% mayors; 11% Landrat; 65% others
+```
+
+Of the 9,000 board member-year observations, about one-fourth (2,115 observations) are member-year observations for board members in top positions. Of those 2,115 observations, 875 are mayors and 1,006 are county commissioners; only 238 top-position observations belong to persons that are not full-time politicians.
+
+```{r Comparison: Board Members in Entire board and Top Positions, include=TRUE, echo= FALSE}
+### Comparison: Board Members in Top Positions and Entire Board
+ggplot(SparkassenBoard, aes(TopPosition, frequency, fill = Incumbent)) +
   geom_bar(aes(y = (..count..)), position=position_dodge(), width=1) +
   xlab("") +
   scale_x_discrete(limit= c("0", "1"),
                    labels=c("Non-Top Positions", "Top Positions")) +
-  ylab("Number of Board Members") +
+  ylab("No. Member-Year Observations") +
+  theme_bw() +
   theme(legend.position = "bottom") +
   scale_fill_discrete(name="Political Position",
                       breaks=c("0", "1", "2"),
                       labels=c("No Full-Time Politician", "Mayor", "County Commissioner"))
 ```
 
-As outlined above, the *Sparkassen* dataset contains information on names, political position (no full-time politician; mayor; county commissioner) and position within the board (top position; non-top position). This allows us the estimate the degree of politicization of boards and the patterns of politicization.
+Overall, this shows that a considerable share of bank boards is hold by full-time politicians (34%). Moreover, political representation is pronounced in top positions of banks' boards (county commissioners are only in top positions); as board seat holders of top positions have much higher influence on banks' strategic decisions (e.g. as the chairman is always member of the credit committee), this finding confirms our suspicion that German *Sparkassen* are subject to potentially high political control and shows that politicization of public savings banks mainly works through top positions.
+
 
 ## 5.2. Election Dataset
 

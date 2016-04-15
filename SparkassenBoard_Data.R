@@ -16,6 +16,7 @@ SparkassenBoard <- read.table("BankBoards_Bavaria_RImport.txt",
 
 # define variable class:
 SparkassenBoard$Incumbent <- as.character(SparkassenBoard$Incumbent)
+SparkassenBoard$board_size <- as.numeric(SparkassenBoard$board_size)
 
 
 # tidy data:
@@ -38,6 +39,9 @@ SparkassenBoard$TopPosition[SparkassenBoard$chair != "no"] <- 1
 SparkassenBoard$TopPosition <- as.character(SparkassenBoard$TopPosition)
 
 # Create sub-dataframes
+## :unique banks
+SparkassenBoard_UniqueBanks <- unique(SparkassenBoard[,c("bank_ID", "bank_name", "federal_state", 
+                                                         "city", "board_size")])
 ## :unique board members
 SparkassenBoard_UniqueMembers <- unique(SparkassenBoard[,c("NameCandidate1", "occupation", "Incumbent", "TopPosition",
                                       "NameMunicipality")])
