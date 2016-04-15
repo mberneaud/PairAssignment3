@@ -109,11 +109,9 @@ Finally, we created four sub-data frames by subsetting the initial dataframe in 
 ```{r subsetting dataframe}
 # Create sub-dataframes
 ## :unique banks
-SparkassenBoard_UniqueBanks <- unique(SparkassenBoard[,c("bank_ID", "bank_name", "federal_state", "city", "board_size")])
+SparkassenBoard_UniqueBanks <- unique(SparkassenBoard[ ,c("bank_ID", "bank_name", "federal_state", "city", "board_size")])
 ## :unique board members
-SparkassenBoard_UniqueMembers <- unique(SparkassenBoard[,c("NameCandidate1", "occupation", "Incumbent", "NameMunicipality")])
-## :mayors at board
-SparkassenBoard_UniqueBoardMayors <- subset(SparkassenBoard_UniqueMembers, Incumbent == "1")
+
 ## :Top Positions only
 SparkassenBoard_TopPositions <- subset(SparkassenBoard, TopPosition == 1)
 ```
@@ -197,21 +195,6 @@ MayorElection <- slide(MayorElection, Var = "SparkassenMember",
 
 
 ## 5.1. Sparkassen Dataset
-```{r sparkassen_top_positions, include=TRUE, echo=FALSE, fig.height=8, fig.width=10}
-ggplot(SparkassenBoard, aes(TopPosition, frequency(TopPosition))) +
-  geom_bar(stat = "identity") +
-  xlab("") +
-  ylab("Number of Seats") +
-  ggtitle("Number of Top Positions in Boards")
-```
-
-```{r politicians_in_Sparkassen_board, include=TRUE, echo=FALSE, fig.height=8, fig.width=10}
-barplot(table(SparkassenBoard_TopPositions$Incumbent),
-        main = "Share of Politicians in Top Positions on Bank Board",
-        names.arg = c("Non-Political", "Mayor", "Landrat"),
-        ylab = "Board Members in Top Positions")
-
-```
 
 As outlined above, the *Sparkassen* dataset contains information on names, political position (no full-time politician; mayor; county commissioner) and position within the board (top position; non-top position). This allows us the estimate the degree of politicization of boards and the patterns of politicization.
 
@@ -234,6 +217,17 @@ ggplot(SparkassenBoard_UniqueBanks, aes(x = 1, y = board_size)) +
   ylab("Number of Board Members")
 ```
 
+```{r Boxplot: Board Size, include=TRUE, echo=FALSE, fig.width=2, fig.height=2, fig.align="center"}
+ggplot(SparkassenBoard_UniqueBanks, aes(x = 1, y = board_size)) +
+  geom_boxplot() +
+  ggtitle("Size of Bank Board") +
+  xlab("") +
+   theme_bw() +
+  ylab("Number of Board Members") +
+  theme(  axis.text.x = element_blank())
+```
+
+
 For those 79 banks, we have overall almost 9,000 board member-year observations, about 1,600 unique board member profiles of which 410 are mayors (23%) and 175 are county commissioners (11%).
 
 ```{r Basic summary statistics board member profiles}
@@ -253,17 +247,17 @@ prop.table(table(SparkassenBoard$Incumbent)) # 23% mayors; 11% Landrat; 65% othe
 
 Of the 9,000 board member-year observations, about one-fourth (2,115 observations) are member-year observations for board members in top positions. Of those 2,115 observations, 875 are mayors and 1,006 are county commissioners; only 238 top-position observations belong to persons that are not full-time politicians.
 
-```{r Comparison: Board Members in Entire board and Top Positions, include=TRUE, echo= FALSE}
+```{r Comparison: Board Members in Entire board and Top Positions, include=TRUE, echo= FALSE, fig.height=4, fig.align="center"}
 ### Comparison: Board Members in Top Positions and Entire Board
 ggplot(SparkassenBoard, aes(TopPosition, frequency, fill = Incumbent)) +
   geom_bar(aes(y = (..count..)), position=position_dodge(), width=1) +
   xlab("") +
+  ggtitle("Political Board Representation in Top Positions \n and Non-Top Positions") +
   scale_x_discrete(limit= c("0", "1"),
                    labels=c("Non-Top Positions", "Top Positions")) +
   ylab("No. Member-Year Observations") +
   theme_bw() +
-  theme(legend.position = "bottom") +
-  scale_fill_discrete(name="Political Position",
+  scale_fill_discrete(name="",
                       breaks=c("0", "1", "2"),
                       labels=c("No Full-Time Politician", "Mayor", "County Commissioner"))
 ```
@@ -310,6 +304,10 @@ Out of all the mayors elected over the entire time period, `r round((table(Mayor
 ## 5.3. Merged Dataset
 
 # 6. First Inferences
+
+Finally, we run first regressions in order to test the effect of board membership for re-election chances of mayors. In a first, very simple equation (1), we regress re-election (binary variable) on board membership (binary variable); in the second specification we add municipality size proxied by the number of eligible voters in a municipality to the regression. As the distribution of municipality size is strongly positively skewed, we include the variable in log format (Figure X). In regression 3, we furthermore add the previous vote share of the incumbent to the regression assuming that the previous vote share should be positively correlated with re-election chance of the incumbent. Finally, we add a dummy for the gender of the incumbent in specification 4.
+
+
 
 [^1]: As the focus of this paper is the analysis of the electoral effect of board membership, we focus on the re-election chances of mayors with board membership in a *Sparkasse* compared to those without a board seat. A closer examination of the patterns of politicization of banks' boards, such as partisanship within boards, is therefore not conducted and goes beyond the scope of this paper. Future steps of the PhD research project will, however, analyze those patterns.
 

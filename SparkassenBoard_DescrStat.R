@@ -24,9 +24,10 @@ summary(SparkassenBoard_UniqueBanks$board_size) # max: 32 seats, min: 6 seats, a
 
 ggplot(SparkassenBoard_UniqueBanks, aes(x = 1, y = board_size)) +
   geom_boxplot() +
-  ggtitle("Size of Bank Board")
+  ggtitle("Size of Bank Board") +
   xlab("") +
-  ylab("Number of Board Members")
+  ylab("Number of Board Members") +
+  theme(  axis.text.x = element_blank())
 
 # DESCRIPTIVE STATISTICS: BOARD MEMBERS
 
@@ -71,11 +72,12 @@ barplot(table(SparkassenBoard_TopPositions$Incumbent),
 ggplot(SparkassenBoard, aes(TopPosition, frequency, fill = Incumbent)) +
   geom_bar(aes(y = (..count..)), position=position_dodge(), width=1) +
   xlab("") +
+  ggtitle("Political Board Representation in Top Positions \n and Non-Top Positions") +
   scale_x_discrete(limit= c("0", "1"),
                    labels=c("Non-Top Positions", "Top Positions")) +
   ylab("No. Member-Year Observations") +
   theme_bw() +
   theme(legend.position = "bottom") +
-  scale_fill_discrete(name="Political Position",
+  scale_fill_discrete(name="",
                       breaks=c("0", "1", "2"),
                       labels=c("No Full-Time Politician", "Mayor", "County Commissioner"))
