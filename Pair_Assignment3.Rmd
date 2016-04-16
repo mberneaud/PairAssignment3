@@ -272,6 +272,10 @@ The entire cleaned data set contains data on 30973 municipal mayor elections, wh
 # cleaning of party names
 MayorElection$MayorParty <- MayorElection$"Wahlvorschlag 1"
 MayorElection$MayorParty <- str_trim(MayorElection$MayorParty)
+
+MayorElection$Year <- as.integer(MayorElection$Year)
+sel <- MayorElection[, "Year"] >= 2000
+MayorElection <- MayorElection[sel, ]
 #
 # for(i in 1:nrow(MayorElection)) {
 #   if(MayorElection$MayorParty[i] == "NA") {
