@@ -4,14 +4,14 @@ author: |
   | Malte Berneaud-Kötz & Jonas Markgraf
   | Hertie School of Governance
 date: "14 April 2016"
-output: pdf_document
+output: word_document
 subtitle: 'Course: Introduction to Collaborative Social Science Data Analysis'
 header-includes:
 - \usepackage{setspace}
 - \doublespacing
 ---
 
-# 1. Introduction[^3]
+# 1. Introduction
 ```{r setting_chunk_options, include=FALSE}
 knitr::opts_chunk$set(fig.width=8, fig.height=6, fig.path='graphs/',
                       include = FALSE, warning=FALSE, message=FALSE)
@@ -44,40 +44,21 @@ MayorElection <- read_excel("data/MayorElectionData.xlsx",
 # 2. Gathering the Data
 
 ## 2.1 *Sparkassen* Board Membership Data
-We hand-collect a unique panel dataset on the composition of Boards of Directors in Bavaria's *Sparkassen*. This dataset includes detailed information on board member profiles which enables us to identify mayors on bank boards:
 
-- name of board members;
-
-- occupation of board members (identifier for mayors on board);
-
-- position within board: normal board member, chairman, or vice chairman.
-
-Annual information on Board of Directors is hand-collected from savings banks' annual reports available in PDF format on *Bundesanzeiger* for the years from 2006 to 2015; access to data prior 2006 is proprietary (Bureau van Djik's *Bankscope* database), which restricts our observation period. The dataset on boardroom composition constitutes the first comprehensive and systematic investigation of Bavarian savings banks' corporate governance as information on German public banks' boards has not been systematically collected yet.
+We use a hand-collect a unique panel dataset containing information on board members in Bavaria's *Sparkassen*[^3]. This data is available on *Bundesanzeiger* for the years from 2006 to 2015. The dataset includes detailed information on board member profiles (name, occupation, and position within board) which enables us to identify mayors on bank boards.
 
 ## 2.2 Municipal Election Data
-A database on mayoral elections in Bavaria is available from the state statistical office upon request. It contains data on direct municipal elections between 1948 and 2014. With this database we are covering 79 of the 416 German *Sparkassen* (19%) and 2,099 municipalities (19% of all municipalities in Germany). The data for mayoral elections contains the following variables:
 
-- election date;
+A database on mayoral elections in Bavaria is available from the state statistical office upon request. It contains information on direct municipal elections between 1948 and 2014 including election date; name of all candidates and their vote shares; and party affiliation. With this database we are covering 79 of the 416 German *Sparkassen* (19%) and 2,099 municipalities (19% of all municipalities in Germany).
 
-- name of election winner and (at least) the first loser;
-
-- party affiliation of candidates;
-
-- vote shares of candidates;
-
-- dummy for competitive elections (at least two candidates);
-
-- dummy for 'first-time mayor';
-
-- number of eligible voters in voting district (size of municipality).
-
-After obtaining the raw data, we cleaned the data set and subsequently created additional variables needed in our analysis. The individual steps taken are outline in the
+After obtaining the raw data, we cleaned the data set and subsequently created additional variables needed in our analysis. The individual steps taken are outline in the subsequent sections.
 
 # 3. Cleaning the Data
 
 ## 3.1 *Sparkassen* Data
-The data we obtained on the *Sparkassen* had really long and unwieldy names, which we changed to make them more manageable. Moreover, we standardized them to follow use underscores to seperate words and use lower case.
+In order to make our analysis more accessible, we re-defined the variable names in the *Sparkassen* dataset. Moreover, we standardized them to follow use underscores to seperate words and use lower case and deleted redundant whitespaces.
 ```{r renaming_columns}
+# renaming variables
 oldnames <- c("^name$", "^political...employee$", "^governing...opposition$", "retired.1.yes.",
                "Name_CountyMunicipality", "Type_CountyMunicipality")
 newnames <- c("NameCandidate1", "political_employee", "governing_opposition", "retired",
@@ -86,11 +67,7 @@ for (i in seq_along(oldnames)) {
   names(SparkassenBoard) <- gsub(oldnames[i], newnames[i], names(SparkassenBoard))
 }
 
-```
-
-The strings containing the municipality names and the names of mayor candidates contained unnecessary whitespace which we trimmed using the str_trim function from the stringr package.
-
-```{r trimming_whitespace}
+# trimming whitespace:
 SparkassenBoard$NameMunicipality <- str_trim(SparkassenBoard$NameMunicipality)
 SparkassenBoard$NameCandidate1 <- str_trim(SparkassenBoard$NameCandidate1)
 ```
@@ -272,6 +249,9 @@ The entire cleaned data set contains data on 30973 municipal mayor elections, wh
 # cleaning of party names
 MayorElection$MayorParty <- MayorElection$"Wahlvorschlag 1"
 MayorElection$MayorParty <- str_trim(MayorElection$MayorParty)
+# reduce party to main party only
+MayorElection$MayorParty <- sub("/.*","", MayorElection$MayorParty)
+
 
 MayorElection$Year <- as.integer(MayorElection$Year)
 sel <- MayorElection[, "Year"] >= 2000
@@ -315,4 +295,4 @@ Finally, we run first regressions in order to test the effect of board membershi
 
 [^1]: As the focus of this paper is the analysis of the electoral effect of board membership, we focus on the re-election chances of mayors with board membership in a *Sparkasse* compared to those without a board seat. A closer examination of the patterns of politicization of banks' boards, such as partisanship within boards, is therefore not conducted and goes beyond the scope of this paper. Future steps of the PhD research project will, however, analyze those patterns.
 
-[^3]: This paper is based on and a part of a research project by Guillermo Rosas (Washington University in St. Louis; grosas@wustl.edu) and Jonas Markgraf (Hertie School of Governance; markgraf@hertie-school.org).
+[^3]: This dataset was collected as part of a research project by Guillermo Rosas (Washington University in St. Louis; grosas@wustl.edu) and Jonas Markgraf (Hertie School of Governance; markgraf@hertie-school.org).
