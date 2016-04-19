@@ -145,7 +145,7 @@ Hertie School of Governance</p></em></h4>
 <h2>2.3. Municipal Election Data</h2>
 <p>The municipal election data as provided by the Bavarian Statistical Service was provided as an Excel worksheet, which also meant that the columns where named in a way which was not computer-readable. As a result, we had to clean the names of the data set almost entirely. Aside from containing spaces, they also frequently contained line breaks and carriage returns.</p>
 <p>Aside from the variables included in the data set, we extracted information on PhD titles from the names of the candidates from the variable for candidate’s name and created a new variable indicating whether the person has a Dr. title or not; this was necessary in order to merge the <em>Sparkassen</em> dataset and the Mayor Election dataset because name and title of board members was collected as two separate variables. Additionally, we created a variable which indicates whether or not the election of the mayor is contested. We want to use this variable in subsetting our data set later, as it identifies mayors which could have possibly leveraged their position in a <em>Sparkassen</em> board to secure re-election. Using the total of valid votes and votes for the winning cadidate, We calculated the vote shares of the winning candidates.</p>
-<p>Subsequently, we lagged the winner’s vote shares and their sex by one time period so that we can account for mayors’ sex and previous election results in estimating our model on the re-election chances.</p>
+<p>Subsequently, we lagged the winner’s vote shares and their sex by one time period so that we can account for mayors’ sex and previous election results in estimating our model of the re-election chances.</p>
 <p>The municipal election data set was subsetted to only include the time period for which we have data on <em>Sparkassen</em> board membership, which is from 2006 to 2016. We excluded elections which required run-offs, as leading candidate in those elections does not have to be the one winning the run-off. Moreover, elections where no candidate besides the incumbent mayor ran for office were excluded. The study data set contains 2559 observations across two municipal election rounds (2008 and 2014).</p>
 </div>
 </div>
@@ -273,13 +273,13 @@ Previous Vote Share
 <td style="padding-right: 12px; border: none;">
 </td>
 <td style="padding-right: 12px; border: none;">
--2.17<sup style="vertical-align: 0px;">***</sup>
+-0.02<sup style="vertical-align: 0px;">***</sup>
 </td>
 <td style="padding-right: 12px; border: none;">
--2.12<sup style="vertical-align: 0px;">***</sup>
+-0.02<sup style="vertical-align: 0px;">***</sup>
 </td>
 <td style="padding-right: 12px; border: none;">
--2.05<sup style="vertical-align: 0px;">***</sup>
+-0.02<sup style="vertical-align: 0px;">***</sup>
 </td>
 </tr>
 <tr>
@@ -288,13 +288,13 @@ Previous Vote Share
 <td style="padding-right: 12px; border: none;">
 </td>
 <td style="padding-right: 12px; border: none;">
-(0.22)
+(0.00)
 </td>
 <td style="padding-right: 12px; border: none;">
-(0.23)
+(0.00)
 </td>
 <td style="padding-right: 12px; border: none;">
-(0.23)
+(0.00)
 </td>
 </tr>
 <tr>
@@ -444,12 +444,15 @@ Num. obs.
 </td>
 </tr>
 </table>
+<p>The regression tables for the different specifications show a stable, statistically slightly significant effect for board membership of the incumbent; the direction of the effect is as expected, i.e. incumbents with a board seat seem to be more likely to be re-elected than their counterparts without a seat in a <em>Sparkasse</em>. Surprisingly, the previous vote share of the incumbent is negatively correlated with incumbent’s re-election chances; the effect is statistically strongly significant<a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a>. Furthermore, municipality size appears to have no statistically significant effect for the re-election chance of the mayor. Finally, female incumbents seem to be more likely be re-elected than male incumbents; the coefficient is however also only weakly statistically significant<a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a>.</p>
 </div>
 <div class="footnotes">
 <hr />
 <ol>
 <li id="fn1"><p>This dataset was collected as part of a research project by Guillermo Rosas (Washington University in St. Louis; <a href="mailto:grosas@wustl.edu">grosas@wustl.edu</a>) and Jonas Markgraf (Hertie School of Governance; <a href="mailto:markgraf@hertie-school.org">markgraf@hertie-school.org</a>).<a href="#fnref1">↩</a></p></li>
 <li id="fn2"><p>As the focus of this paper is the analysis of the electoral effect of board membership, we focus on the re-election chances of mayors with board membership in a <em>Sparkasse</em> compared to those without a board seat. A closer examination of the patterns of politicization of banks’ boards, such as partisanship within boards, is therefore not conducted and goes beyond the scope of this paper. Future steps of the PhD research project will, however, analyze those patterns.<a href="#fnref2">↩</a></p></li>
+<li id="fn3"><p>This result is alarming and indicates that our transformations are partly erroneous. This needs to be further investigated for the final paper.<a href="#fnref3">↩</a></p></li>
+<li id="fn4"><p>The direction of this coefficient is also surprising and requires further investigation, in particular of our specifications and transformations.<a href="#fnref4">↩</a></p></li>
 </ol>
 </div>
 

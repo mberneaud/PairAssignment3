@@ -3,7 +3,7 @@ title: 'Pair Assignment 3: Gathering, Cleaning, Merging and Exploring our Data'
 author: |
   | Malte Berneaud-Kötz & Jonas Markgraf
   | Hertie School of Governance
-date: "14 April 2016"
+date: "19 April 2016"
 output: html_document
 subtitle: 'Course: Introduction to Collaborative Social Science Data Analysis'
 header-includes:
@@ -167,7 +167,7 @@ MayorElection$Year <- strtrim(MayorElection$ElectionDate, 4L)
 MayorElection$Contested <- ifelse(nchar(MayorElection$`Name 2Nachname Titel Vorname`)>2, 1, 0)
 
 # Calculating votes shares from the data
-MayorElection$VoteShareWinner <-  MayorElection$VotesCandidate1 / MayorElection$ValBallots
+MayorElection$VoteShareWinner <-  (MayorElection$VotesCandidate1 / MayorElection$ValBallots) * 100
 ```
 
 ```{r, dependent_variable}
@@ -366,6 +366,13 @@ htmlreg(list(model1, model2, model3, model4),
         custom.coef.names = regression_labels)
 ```
 
+The regression tables for the different specifications show a stable, statistically slightly significant effect for board membership of the incumbent; the direction of the effect is as expected, i.e. incumbents with a board seat seem to be more likely to be re-elected than their counterparts without a seat in a *Sparkasse*. Surprisingly, the previous vote share of the incumbent is negatively correlated with incumbent's re-election chances; the effect is statistically strongly significant[^2]. Furthermore, municipality size appears to have no statistically significant effect for the re-election chance of the mayor. Finally, female incumbents seem to be more likely be re-elected than male incumbents; the coefficient is however also only weakly statistically significant[^4].
+
+
 [^1]: As the focus of this paper is the analysis of the electoral effect of board membership, we focus on the re-election chances of mayors with board membership in a *Sparkasse* compared to those without a board seat. A closer examination of the patterns of politicization of banks' boards, such as partisanship within boards, is therefore not conducted and goes beyond the scope of this paper. Future steps of the PhD research project will, however, analyze those patterns.
 
+[^2]: This result is alarming and indicates that our transformations are partly erroneous. This needs to be further investigated for the final paper.
+
 [^3]: This dataset was collected as part of a research project by Guillermo Rosas (Washington University in St. Louis; grosas@wustl.edu) and Jonas Markgraf (Hertie School of Governance; markgraf@hertie-school.org).
+
+[^4]: The direction of this coefficient is also surprising and requires further investigation, in particular of our specifications and transformations.
