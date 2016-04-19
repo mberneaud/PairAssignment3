@@ -4,7 +4,7 @@ author: |
   | Malte Berneaud-Kötz & Jonas Markgraf
   | Hertie School of Governance
 date: "19 April 2016"
-output: html_document
+output: pdf_document
 subtitle: 'Course: Introduction to Collaborative Social Science Data Analysis'
 header-includes:
 - \usepackage{setspace}
@@ -20,7 +20,7 @@ knitr::opts_chunk$set(fig.height=4, fig.path='graphs/',
 
 ```{r fetching_packages}
  # Packages needed for the execution of this Rmd are listed in include.packages and checked against the installed packages on the machine executing the code. If they are not installed, they will be installed automatically.
-include.packages <- c("dplyr", "ggplot2", "stringr", "readxl", "DataCombine", "texreg")
+include.packages <- c("dplyr", "ggplot2", "stringr", "readxl", "DataCombine", "texreg", "stargazer")
   needed.packages <- include.packages[!(include.packages %in% installed.packages()[, "Package"])]
 if(length(needed.packages)) install.packages(needed.packages, repos = "https://cran.uni-muenster.de/")
 
@@ -357,16 +357,16 @@ model4 <- glm(Reelection~IncumbentSparkassenMember +
               data = MayorElection,
               family = "binomial")
 
-regression_labels <- c("(Intercept)", "Sparkassen Membership", "Previous Vote Share",
-                       "Municipality Size (log)", "Female Incumbent")
+regression_labels <- c("Sparkassen Membership", "Previous Vote Share", "Municipality Size (log)", "Female Incumbent")
 
 ```
 ```{r display regression outputs, include=TRUE, echo=FALSE, results="asis"}
-htmlreg(list(model1, model2, model3, model4),
-        custom.coef.names = regression_labels)
+stargazer(model1, model2, model3, model4,
+          covariate.labels = regression_labels,
+          dep.var.labels   = "Probability of Re-Election")
 ```
 
-The regression tables for the different specifications show a stable, statistically slightly significant effect for board membership of the incumbent; the direction of the effect is as expected, i.e. incumbents with a board seat seem to be more likely to be re-elected than their counterparts without a seat in a *Sparkasse*. Surprisingly, the previous vote share of the incumbent is negatively correlated with incumbent's re-election chances; the effect is statistically strongly significant[^2]. Furthermore, municipality size appears to have no statistically significant effect for the re-election chance of the mayor. Finally, female incumbents seem to be more likely be re-elected than male incumbents; the coefficient is however also only weakly statistically significant[^4].
+The regression tables for the different specifications show a stable, statistically weakly significant effect (5% level of statistical significance) for board membership of the incumbent; the direction of the effect is as expected, i.e. incumbents with a board seat seem to be more likely to be re-elected than their counterparts without a seat in a *Sparkasse*. Surprisingly, the previous vote share of the incumbent is negatively correlated with incumbent's re-election chances; the effect is significant at any conventional level of statistical significance[^2]. Furthermore, municipality size appears to have no statistically significant at the 5% level of statistical significance (but at the 10% level) effect for the re-election chance of the mayor. Finally, female incumbents seem to be more likely be re-elected than male incumbents; the coefficient is however also only weakly statistically significant (5% level of statistical significance)[^4].
 
 
 [^1]: As the focus of this paper is the analysis of the electoral effect of board membership, we focus on the re-election chances of mayors with board membership in a *Sparkasse* compared to those without a board seat. A closer examination of the patterns of politicization of banks' boards, such as partisanship within boards, is therefore not conducted and goes beyond the scope of this paper. Future steps of the PhD research project will, however, analyze those patterns.

@@ -10,7 +10,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-<meta name="date" content="2016-04-14" />
+<meta name="date" content="2016-04-19" />
 
 <title>Pair Assignment 3: Gathering, Cleaning, Merging and Exploring our Data</title>
 
@@ -112,7 +112,7 @@ $(document).ready(function () {
 <h3 class="subtitle"><em>Course: Introduction to Collaborative Social Science Data Analysis</em></h3>
 <h4 class="author"><em><p>Malte Berneaud-Kötz &amp; Jonas Markgraf<br />
 Hertie School of Governance</p></em></h4>
-<h4 class="date"><em>14 April 2016</em></h4>
+<h4 class="date"><em>19 April 2016</em></h4>
 
 </div>
 
@@ -235,7 +235,7 @@ Statistical models
 </tr>
 <tr>
 <td style="padding-right: 12px; border: none;">
-Sparkassen Membership
+IncumbentSparkassenMemberTRUE
 </td>
 <td style="padding-right: 12px; border: none;">
 0.25<sup style="vertical-align: 0px;">*</sup>
@@ -268,7 +268,7 @@ Sparkassen Membership
 </tr>
 <tr>
 <td style="padding-right: 12px; border: none;">
-Previous Vote Share
+L.VoteShareWinner
 </td>
 <td style="padding-right: 12px; border: none;">
 </td>
@@ -299,7 +299,7 @@ Previous Vote Share
 </tr>
 <tr>
 <td style="padding-right: 12px; border: none;">
-Municipality Size (log)
+log(NumberEligVoter)
 </td>
 <td style="padding-right: 12px; border: none;">
 </td>
@@ -328,7 +328,7 @@ Municipality Size (log)
 </tr>
 <tr>
 <td style="padding-right: 12px; border: none;">
-Female Incumbent
+L.Geschlecht1w
 </td>
 <td style="padding-right: 12px; border: none;">
 </td>
@@ -444,6 +444,42 @@ Num. obs.
 </td>
 </tr>
 </table>
+% Table created by stargazer v.5.2 by Marek Hlavac, Harvard University. E-mail: hlavac at fas.harvard.edu % Date and time: Tue, Apr 19, 2016 - 20:09:42
+\begin{table}[!htbp] \centering 
+  \caption{} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{5pt}}lcccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ &amp; \multicolumn{4}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-5} 
+\\[-1.8ex] &amp; \multicolumn{4}{c}{Reelection} \\ 
+\\[-1.8ex] &amp; (1) &amp; (2) &amp; (3) &amp; (4)\\ 
+\hline \\[-1.8ex] 
+ IncumbentSparkassenMember &amp; 0.247$^{**}$ &amp; 0.247$^{**}$ &amp; 0.236$^{**}$ &amp; 0.239$^{**}$ \\ 
+  &amp; (0.108) &amp; (0.111) &amp; (0.111) &amp; (0.111) \\ 
+  &amp; &amp; &amp; &amp; \\ 
+ L.VoteShareWinner &amp;  &amp; $-$0.022$^{***}$ &amp; $-$0.021$^{***}$ &amp; $-$0.020$^{***}$ \\ 
+  &amp;  &amp; (0.002) &amp; (0.002) &amp; (0.002) \\ 
+  &amp; &amp; &amp; &amp; \\ 
+ log(NumberEligVoter) &amp;  &amp;  &amp; 0.079$^{*}$ &amp; 0.081$^{*}$ \\ 
+  &amp;  &amp;  &amp; (0.045) &amp; (0.045) \\ 
+  &amp; &amp; &amp; &amp; \\ 
+ L.Geschlecht1w &amp;  &amp;  &amp;  &amp; 0.471$^{**}$ \\ 
+  &amp;  &amp;  &amp;  &amp; (0.183) \\ 
+  &amp; &amp; &amp; &amp; \\ 
+ Constant &amp; 0.017 &amp; 1.486$^{***}$ &amp; 0.815$^{**}$ &amp; 0.725$^{*}$ \\ 
+  &amp; (0.043) &amp; (0.155) &amp; (0.408) &amp; (0.410) \\ 
+  &amp; &amp; &amp; &amp; \\ 
+\hline \\[-1.8ex] 
+Observations &amp; 2,549 &amp; 2,506 &amp; 2,506 &amp; 2,506 \\ 
+Log Likelihood &amp; $-$1,763.136 &amp; $-$1,683.272 &amp; $-$1,681.696 &amp; $-$1,678.274 \\ 
+Akaike Inf. Crit. &amp; 3,530.272 &amp; 3,372.543 &amp; 3,371.392 &amp; 3,366.548 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  &amp; \multicolumn{4}{r}{$^{*}$p$&lt;$0.1; $^{**}$p$&lt;$0.05; $^{***}$p$&lt;$0.01} \\ 
+\end{tabular} 
+\end{table}
 <p>The regression tables for the different specifications show a stable, statistically slightly significant effect for board membership of the incumbent; the direction of the effect is as expected, i.e. incumbents with a board seat seem to be more likely to be re-elected than their counterparts without a seat in a <em>Sparkasse</em>. Surprisingly, the previous vote share of the incumbent is negatively correlated with incumbent’s re-election chances; the effect is statistically strongly significant<a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a>. Furthermore, municipality size appears to have no statistically significant effect for the re-election chance of the mayor. Finally, female incumbents seem to be more likely be re-elected than male incumbents; the coefficient is however also only weakly statistically significant<a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a>.</p>
 </div>
 <div class="footnotes">
