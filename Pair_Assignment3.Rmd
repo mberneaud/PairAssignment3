@@ -12,7 +12,7 @@ header-includes:
 ---
 
 ```{r setting_chunk_options, include=FALSE}
-knitr::opts_chunk$set(fig.height=4, fig.path='graphs/',
+knitr::opts_chunk$set(fig.height=3, fig.width = 2.4, fig.align = "center", fig.path='graphs/',
                       include = FALSE, warning=FALSE, message=FALSE)
 # Supressed output for any code chunk in the document, so all graphs, tables,
 # etc which need to have the outputs shown should use include = TRUE as an option
@@ -44,18 +44,18 @@ MayorElection <- read_excel("data/MayorElectionData.xlsx",
 
 ## 1.1. *Sparkassen* Board Membership Data
 
-We use a hand-collect a unique panel dataset containing information on board members in Bavaria's *Sparkassen*[^3]. This data is available on *Bundesanzeiger* for the years from 2006 to 2015. The dataset includes detailed information on board member profiles (name, occupation, and position within board) which enables us to identify mayors on bank boards.
+We hand-collected a unique panel dataset containing information on board members in Bavaria's *Sparkassen*[^3]. This data is available on *Bundesanzeiger* for the years from 2006 to 2015. The dataset includes detailed information on board member profiles (name, occupation, and position within board) which enables us to identify mayors on bank boards.
 
 ## 1.2. Municipal Election Data
 
-A database on mayoral elections in Bavaria is available from the state statistical office upon request. It contains information on direct municipal elections between 1948 and 2014 including election date; name of all candidates and their vote shares; and party affiliation. With this database we are covering 79 of the 416 German *Sparkassen* (19%) and 2,099 municipalities (19% of all municipalities in Germany).
+A database on mayoral elections in Bavaria is available from the state statistical office upon request. It contains information on direct municipal elections between 1948 and 2014, including election date; name of all candidates and their vote shares; and party affiliation. With this database we are covering 79 of the 416 German *Sparkassen* (19%) and 2,099 municipalities (19% of all municipalities in Germany).
 
 After obtaining the raw data, we cleaned the data set and subsequently created additional variables needed in our analysis. The individual steps taken are outline in the subsequent sections.
 
 # 2. Cleaning the Data
 
 ## 2.1. *Sparkassen* Data
-In order to make our analysis more accessible, we re-defined the variable names in the *Sparkassen* dataset. Moreover, we standardized them to follow use underscores to seperate words and use lower case and deleted redundant whitespaces.
+In order to make our analysis more accessible, we re-defined the variable names in the *Sparkassen* dataset, in order to make them easier to process in R.
 ```{r renaming_columns}
 # renaming variables
 oldnames <- c("^name$", "^political...employee$", "^governing...opposition$", "retired.1.yes.",
@@ -92,11 +92,9 @@ SparkassenBoard_UniqueBanks <- unique(SparkassenBoard[ ,c("bank_ID", "bank_name"
 SparkassenBoard_TopPositions <- subset(SparkassenBoard, TopPosition == 1)
 ```
 
-## 2.2. Creating Additional Variables
-In addition to the variables available in the data set already, we created variables (1) distinguishing 'first time mayors', (2) identifying competitive elections where there were more than one candidate, (3) the number of times a single mayor was elected, which allowed us to identify mayor's first re-election. This last point is important because our research is interested in the first re-election of mayors specifically.
 
-## 2.3. Municipal Election Data
-The municipal election data as provided by the Bavarian Statistical Service was provided as an Excel worksheet, which also meant that the columns where named in a way which was not computer-readable. As a result, we had to clean the names of the data set almost entirely. Aside from containing spaces, they also frequently contained line breaks and carriage returns.
+## 2.2. Municipal Election Data
+The municipal election data as provided by the Bavarian Statistical Service was provided as an Excel worksheet, which also meant that the columns where named in a way which was difficult to work with in R. As a result, we had to clean the names of the data set almost entirely. Aside from containing spaces, they also frequently contained line breaks and carriage returns.
 
 ```{r cleaning_names_municipality_elections}
 # removing newlines
@@ -146,6 +144,7 @@ for(i in 1:nrow(MayorElection)) {
 }
 
 ```
+Due to the large number of different parties, which is caused by Mayors receiving support for multiple parties and a large number of independent voter lists, we simplified the party names in the data set. We created factor levels for the two major parties among the mayors, CSU and SPD, and grouped the remaining parties into one "other" category. These factor levels represent the principal party endorsing each mayor. 
 
 ```{r additional_variables}
 # Extracting Phd titles
@@ -178,8 +177,8 @@ MayorElection$Reelection <- ifelse(MayorElection$NameCandidate1 == MayorElection
 
 MayorElection$Reelection <- as.factor(MayorElection$Reelection)
 ```
-Aside from the variables included in the data set, we extracted information on PhD titles from the names of the candidates from the variable for candidate's name and created a new variable indicating whether the person has a Dr. title or not; this was necessary in order to merge the *Sparkassen* dataset and the Mayor Election dataset because name and title of board members was collected as two separate variables. Additionally, we created a variable which indicates whether or not the election of the mayor is contested. We want to use this variable in subsetting our data set later, as it identifies mayors which could have possibly leveraged their position in a *Sparkassen* board to secure re-election.
-Using the total of valid votes and votes for the winning cadidate, We calculated the vote shares of the winning candidates.
+Aside from the variables included in the data set, we extracted information on PhD titles from the names of the candidates and created a new variable indicating whether the person has a "Dr."" title or not; this was necessary in order to merge the *Sparkassen* dataset and the Mayor Election dataset because name and title of board members was collected as two separate variables. Additionally, we created a variable which indicates whether or not the election of the mayor is contested. We want to use this variable in subsetting our data set later, as it identifies mayors which could have possibly leveraged their position in a *Sparkassen* board to secure re-election.
+Additionally, using the total of valid votes and votes for the winning cadidate, We calculated the vote shares of the winning candidates.
 
 ```{r lagging_variables}
 
@@ -216,7 +215,7 @@ In order to analyze whether mayors with a board seat in a public savings bank ar
 MayorElection$SparkassenMember <- is.element(MayorElection$NameCandidate1, unique(SparkassenBoard$NameCandidate1))
 ```
 
-However, as we are interested in whether the incumbent (and not the election winner) was holding a board seat, we had to add another variable indicating if the election winner of the previous election (i.e. the incumbent) was a board member.
+However, as we are interested in whether the incumbent (and not the election winner) was holding a board seat, we had to add a lagged variable indicating if the election winner of the previous election (i.e. the incumbent) was a board member.
 
 ```{r Adding variable for Board Membership of Incumbent}
 ##: variable for board membership of incumbent
@@ -248,10 +247,12 @@ ggplot(SparkassenBoard_UniqueBanks, aes(x = 1, y = board_size)) +
   geom_boxplot() +
   ggtitle("Size of Bank Board") +
   xlab("") +
-  ylab("Number of Board Members")
+  ylab("Number of Board Members") + 
+  theme(plot.title = element_text(size=10))
+
 ```
 
-```{r Boxplot: Board Size, include=TRUE, echo=FALSE, fig.width=2, fig.height=2, fig.align="center"}
+```{r Boxplot: Board Size, include=TRUE, echo=FALSE, fig.align="center", out.height="6cm", out.height="5cm"}
 ggplot(SparkassenBoard_UniqueBanks, aes(x = 1, y = board_size)) +
   geom_boxplot() +
   ggtitle("Size of Bank Board") +
@@ -328,11 +329,11 @@ Comparing the chances of re-election for mayors of different parties, we find th
 d <- density(MayorElection$NumberEligVoter, na.rm = TRUE)
 plot(d, main = "Kernel density: Eligible Voters Per Municipality", xlab = "Eligible Voters Per Municipality")
 ```
-The number of eligible voters per municipality, which we intend to use to control for municipality size is severly right-skewed, as expected, so we will log it in our analysis. 
+The number of eligible voters per municipality, which we intend to use to control variable for municipality size is severly right-skewed, as expected, so we will log it in our analysis. 
 
 # 5. First Inferences
 
-Finally, we run first regressions in order to test the effect of board membership for re-election chances of mayors. In a first, very simple equation (1), we regress re-election (binary variable) on board membership (binary variable); in the second specification we add municipality size proxied by the number of eligible voters in a municipality to the regression. As the distribution of municipality size is strongly positively skewed, we include the variable in log format (Figure X). In regression 3, we furthermore add the previous vote share of the incumbent to the regression assuming that the previous vote share should be positively correlated with re-election chance of the incumbent. Finally, we add a dummy for the gender of the incumbent in specification 4. As our response variable is categorical, we use a logistic regression model.
+Finally, we run first regressions in order to test the effect of board membership for re-election chances of mayors. In a first, very simple equation (1), we regress re-election (binary variable) on board membership (binary variable); in the second specification we add municipality size proxied by the number of eligible voters in a municipality to the regression. As the distribution of municipality size is strongly positively skewed, we include the variable in log format (see above figure). In regression 3, we furthermore add the previous vote share of the incumbent to the regression assuming that the previous vote share should be positively correlated with re-election chance of the incumbent. Finally, we add a dummy for the gender of the incumbent in specification 4. As our response variable is categorical, we use a logistic regression model.
 
 ```{r regression models}
 model1 <- glm(Reelection~IncumbentSparkassenMember,

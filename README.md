@@ -6,11 +6,11 @@ This repo contains [Jonas Markgraf's](https://github.com/jmarkgraf) and [Malte B
 
 ## Note regarding the data sets used in the analysis
 
-As we do not intent to publish the data used in the analysis publically, it needs to be manually inserted into the `data/` directory. Otherwise, the RMarkdown will not render correctly as one of the earlier code chunks will throw an error right away. 
+As we do not intent to publish the data used in the analysis publicly, it needs to be manually inserted into the `data/`  directory. Otherwise, the RMarkdown will not render correctly as one of the earlier code chunks will throw an error right away. 
 
-*Note to Christopher: We'll send you the data along with 
+*Note to Christopher: We'll have sent you the data along with the repository link via email.
 
 
 ## Important files
 
-The vast majority of the analysis is done within the [RMarkdown file](PairAssignment3.Rmd), the rendered output of that file is the [PairAssignment3.pdf](PairAssignment3.pdf).
+The entirety of the analysis is done within the [RMarkdown file](PairAssignment3.Rmd), the rendered output of that file is the [PairAssignment3.pdf](PairAssignment3.pdf). There are some R source files found in the `R_scripts` folder, but they are not directly integrated into the Rmarkdown file. 
