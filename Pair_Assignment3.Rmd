@@ -4,7 +4,7 @@ author: |
   | Malte Berneaud-Kötz & Jonas Markgraf
   | Hertie School of Governance
 date: "14 April 2016"
-output: word_document
+output: pdf_document
 subtitle: 'Course: Introduction to Collaborative Social Science Data Analysis'
 header-includes:
 - \usepackage{setspace}
@@ -13,7 +13,7 @@ header-includes:
 
 # 1. Introduction
 ```{r setting_chunk_options, include=FALSE}
-knitr::opts_chunk$set(fig.width=8, fig.height=6, fig.path='graphs/',
+knitr::opts_chunk$set(fig.height=4, fig.path='graphs/',
                       include = FALSE, warning=FALSE, message=FALSE)
 # Supressed output for any code chunk in the document, so all graphs, tables,
 # etc which need to have the outputs shown should use include = TRUE as an option
@@ -118,7 +118,35 @@ names(MayorElection) <- gsub("gültigeStimmen 1", "VotesCandidate1", names(Mayor
 names(MayorElection) <- gsub("Stimmen für nicht genannte Bewerber zusammen", "VotesRest", names(MayorElection))
 
 ```
-Aside from the variables included in the data set, we extracted information on PhD titles from the names of the candidates from the variable for candidate's name and created a new variable indicating whether the person has a Dr. title or not; this was necessary in order to merge the *Sparkassen* dataset and the Mayor Election dataset because name and title of board members was collected as two separate variables. Additionally, we created a variable which indicates whether or not the election of the mayor is contested. We want to use this variable in subsetting our data set later, as it identifies mayors which could have possibly leveraged their position in a *Sparkassen* board to secure re-election.
+
+```{r cleaning_election_dataset}
+# Cleaning of gender strings
+MayorElection$Geschlecht1 <- str_trim(MayorElection$Geschlecht1)
+
+# cleaning of party names
+MayorElection$MayorParty <- MayorElection$"Wahlvorschlag 1"
+MayorElection$MayorParty <- str_trim(MayorElection$MayorParty)
+# reduce party to main party only
+MayorElection$MayorParty <- sub("/.*","", MayorElection$MayorParty)
+
+
+
+# Cleaning the party names for bar plotting
+MayorElection$CleanParty <- NA
+for(i in 1:nrow(MayorElection)) {
+  if(is.na(MayorElection$MayorParty[i])) {
+  next
+  }
+  if(grepl("CSU", MayorElection$MayorParty[i])) {
+    MayorElection$CleanParty[i] <- "CSU"
+  }else if(grepl("SPD", MayorElection$MayorParty[i])) {
+    MayorElection$CleanParty[i] <- "SPD"
+  } else {
+    MayorElection$CleanParty[i] <- "Other"
+  }
+}
+
+```
 
 ```{r additional_variables}
 # Extracting Phd titles
@@ -136,8 +164,49 @@ MayorElection <- merge(MayorElection, tally)
 # Extracting years from the election date character string
 MayorElection$Year <- strtrim(MayorElection$ElectionDate, 4L)
 
-# TODO: creating variable indicating number of terms
+# Dummy variable for contested elections
+MayorElection$Contested <- ifelse(nchar(MayorElection$`Name 2Nachname Titel Vorname`)>2, 1, 0)
+
+# Calculating votes shares from the data
+MayorElection$VoteShareWinner <-  MayorElection$VotesCandidate1 / MayorElection$ValBallots
 ```
+
+```{r, dependent_variable}
+# creating lagged incumbency for the calculation of the re-election binary variable
+MayorElection <- slide(MayorElection, Var = "NameCandidate1", TimeVar = "ElectionDate", NewVar = "L.NameCandidate1")
+
+MayorElection$Reelection <- ifelse(MayorElection$NameCandidate1 == MayorElection$L.NameCandidate1, 1, 0)
+
+MayorElection$Reelection <- as.factor(MayorElection$Reelection)
+```
+Aside from the variables included in the data set, we extracted information on PhD titles from the names of the candidates from the variable for candidate's name and created a new variable indicating whether the person has a Dr. title or not; this was necessary in order to merge the *Sparkassen* dataset and the Mayor Election dataset because name and title of board members was collected as two separate variables. Additionally, we created a variable which indicates whether or not the election of the mayor is contested. We want to use this variable in subsetting our data set later, as it identifies mayors which could have possibly leveraged their position in a *Sparkassen* board to secure re-election.
+Using the total of valid votes and votes for the winning cadidate, We calculated the vote shares of the winning candidates.
+
+```{r lagging_variables}
+
+# Lagging variables for analysis, lag of SparkassenMembership is already implemented above. Lag variable is called "IncumbentSparkassenMember"
+MayorElection <- slide(MayorElection, Var = "Geschlecht1", TimeVar = "ElectionDate", NewVar = "L.Geschlecht1")
+MayorElection <- slide(MayorElection, Var = "VoteShareWinner", TimeVar = "ElectionDate", NewVar = "L.VoteShareWinner")
+```
+Subsequently, we lagged the winner's vote shares and their sex by one time period so that we can account for mayors' sex and previous election results in estimating our model on the re-election chances. 
+
+```{r subsetting_election_dataset}
+# subsetting by year
+MayorElection$Year <- as.integer(MayorElection$Year)
+sel <- MayorElection[, "Year"] >= 2006
+MayorElection <- MayorElection[sel, ]
+
+# subsetting by election type; excluding run-off elections
+valids <- MayorElection[, "ElectionType"] != 3
+MayorElection <- MayorElection[valids, ]
+
+# Subsetting to contested elections only
+contested <-  MayorElection[, "Contested"] == 1
+MayorElection <- MayorElection[contested, ]
+```
+
+The municipal election data set was subsetted to only include the time period for which we have data on *Sparkassen* board membership, which is from 2006 to 2016. We excluded elections which required run-offs, as leading candidate in those elections does not have to be the one winning the run-off. Moreover, elections where no candidate besides the incumbent mayor ran for office were excluded. The study data set contains `r nrow(MayorElection)` observations across two municipal election rounds (2008 and 2014).
+
 
 # 4. Merging the Data
 
@@ -231,94 +300,14 @@ ggplot(SparkassenBoard, aes(TopPosition, frequency, fill = Incumbent)) +
 Overall, this shows that a considerable share of bank boards is hold by full-time politicians (34%). Moreover, political representation is pronounced in top positions of banks' boards (county commissioners are only in top positions); as board seat holders of top positions have much higher influence on banks' strategic decisions (e.g. as the chairman is always member of the credit committee), this finding confirms our suspicion that German *Sparkassen* are subject to potentially high political control and shows that politicization of public savings banks mainly works through top positions.
 
 ## 5.2. Election Data Set
-```{r cleaning_election_dataset}
-# Cleaning of gender strings
-MayorElection$Geschlecht1 <- str_trim(MayorElection$Geschlecht1)
-
-# cleaning of party names
-MayorElection$MayorParty <- MayorElection$"Wahlvorschlag 1"
-MayorElection$MayorParty <- str_trim(MayorElection$MayorParty)
-# reduce party to main party only
-MayorElection$MayorParty <- sub("/.*","", MayorElection$MayorParty)
-
-
-
-# Cleaning the party names for bar plotting
-MayorElection$CleanParty <- NA
-for(i in 1:nrow(MayorElection)) {
-  if(grepl("NA", MayorElection$MayorParty[i])) {
-  next
-  }
-  if(grepl("CSU", MayorElection$MayorParty[i])) {
-    MayorElection$CleanParty[i] <- "CSU"
-  }else if(grepl("SPD", MayorElection$MayorParty[i])) {
-    MayorElection$CleanParty[i] <- "SPD"
-  } else if(grepl("FDP", MayorElection$MayorParty[i])) {
-    MayorElection$CleanParty[i] <- "FDP"
-  } else if(grepl("Wähler", MayorElection$MayorParty[i])) {
-    MayorElection$CleanParty[i] <- "Free Voters"
-  } else {
-    MayorElection$CleanParty[i] <- "Other"
-  }
-}
-
-# Dummy variable for contested elections
-MayorElection$Contested <- ifelse(!is.na(MayorElection$VotesRest), 1, 0)
-
-# Dummy dependent variable
-MayorElection$Reelection <- NA
-for(i in 2:nrow(MayorElection)) {
-  if(is.na(MayorElection$NameCandidate1[i])){
-    next
-  }
-  if(is.na(MayorElection$NameCandidate1[i-1])){
-    next
-  }
-  if(MayorElection$NameCandidate1[i] == MayorElection$NameCandidate1[i-1]) {
-    MayorElection$Reelection <- 1
-  } else {
-    MayorElection$Reelection <- 0
-  }
-}
-
-```
-
-```{r subsetting_election_dataset}
-# subsetting by year
-MayorElection$Year <- as.integer(MayorElection$Year)
-sel <- MayorElection[, "Year"] >= 2006
-MayorElection <- MayorElection[sel, ]
-
-# subsetting by election type; excluding run-off elections
-valids <- MayorElection[, "ElectionType"] == 1
-MayorElection <- MayorElection[valids, ]
-
-# Subsetting to contested elections only
-contested <-  MayorElection[, "Contested"] == 1
-MayorElection <- MayorElection[contested, ]
-```
-
-The municipal election data set was subsetted to only include the time period for which we have data on *Sparkassen* board membership, which is from 2006 to 2016. We excluded elections which required run-offs, as leading candidate in those elections does not have to be the one winning the run-off. Moreover the run-off elections themselves, as they might over-state the winning margins of candidates. Moreover, elections where no candidate besides the incumbent mayor ran for office were excluded.
-
-```{r, dependent_variable}
-# creating lagged incumbency for the calculation of the re-election binary variable
-MayorElection <- slide(MayorElection, Var = "NameCandidate1", TimeVar = "ElectionDate", NewVar = "L.NameCandidate1")
-
-MayorElection$Reelection <- ifelse(MayorElection$NameCandidate1 == MayorElection$L.NameCandidate1, 1, 0)
-
-MayorElection$Reelection <- as.factor(MayorElection$Reelection)
-```
-
-
-The subsetted election data set which we use in the analysis contains `r nrow(MayorElection)` observations across two municipal election rounds (2008 and 2014). It contains the following data on mayoral candidates:  the names of the winning candidates, as well as their party afiliations, year of birth and gender. Additionally, the names of all runner ups are listed as well as the combined number of votes for all candidates who did not win the race.
 
 Out of all the mayors elected the time period under study, `r round((table(MayorElection$Geschlecht1)[2] / nrow(MayorElection))*100, 3)`% of the mayors who were elected were female.
 
 ```{r party_affiliation_mayors, include=TRUE, echo=FALSE, warning=FALSE}
 ggplot(MayorElection, aes(x = CleanParty)) +
-  geom_bar() + ylab("Number of mayors") + xlab("Party affiliation")
+  geom_bar() + ylab("Number of Mayors") + xlab("Party Affiliation") + ggtitle("Number of Mayors by Party Affiliation")
 ```
-The biggest share of mayors are affiliated with the CSU, the second largest belong to independent groups of free voters. The SPD, a popular party in the entirety of Germany does badly, only accounting for 98 of a total of 1598 mayors elected across our study period.
+The biggest share of mayors are affiliated with the CSU, the second largest belong to other parties, which include independent voter lists. The SPD, a popular party in the entirety of Germany does worse than in the remainder of Germany. Out of `r nrow(MayorElection)` mayors which were elected over the study period, only `r table(MayorElection$CleanParty)[3]` mayors were affiliated with the SPD.
 
 ```{r proportion_reelections_by_party}
 reelections <- group_by(MayorElection, CleanParty)
@@ -330,11 +319,17 @@ reelections <- mutate(reelections, share.reelections = number.reelected.mayors /
 
 ```{r reelection_chances, include=TRUE, echo=FALSE, warning=FALSE}
 ggplot(reelections, aes(x = CleanParty, y = share.reelections)) +
-  geom_bar(stat = "identity") + ylab("Share of re-elected mayors") +
-  xlab("Party affiliation")
+  geom_point(stat = "identity") + ylab("Share of Re-elected Mayors") +
+  xlab("Party Affiliation") + ggtitle("Re-election Chances of Mayors by Party")
 ```
 
-Comparing the chances of re-election for mayors of different parties, we find that mayors from all parties except the SPD are re-elected in about 20% of the cases, whose mayors can reclaim office in only 10% of the cases.
+Comparing the chances of re-election for mayors of different parties, we find that mayors from all parties except the SPD are re-elected in about 18% of the cases, whose mayors can reclaim office in roughly 24% of the cases.
+
+```{r distribution_municipality_size, include=TRUE, echo=FALSE, warning=FALSE}
+d <- density(MayorElection$NumberEligVoter, na.rm = TRUE)
+plot(d, main = "Kernel density: Eligble Voters Per Municipality", xlab = "Eligible Voters Per Municipality")
+```
+The number of eligible voters per municipality, which we intend to use to control for municipality size is severly right-skewed, as expected, so we will log it in our analysis. 
 
 ## 5.3. Merged Dataset
 
