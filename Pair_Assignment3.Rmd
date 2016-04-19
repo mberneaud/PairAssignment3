@@ -188,7 +188,7 @@ Using the total of valid votes and votes for the winning cadidate, We calculated
 MayorElection <- slide(MayorElection, Var = "Geschlecht1", TimeVar = "ElectionDate", NewVar = "L.Geschlecht1")
 MayorElection <- slide(MayorElection, Var = "VoteShareWinner", TimeVar = "ElectionDate", NewVar = "L.VoteShareWinner")
 ```
-Subsequently, we lagged the winner's vote shares and their sex by one time period so that we can account for mayors' sex and previous election results in estimating our model on the re-election chances. 
+Subsequently, we lagged the winner's vote shares and their sex by one time period so that we can account for mayors' sex and previous election results in estimating our model of the re-election chances. 
 
 ```{r subsetting_election_dataset}
 # subsetting by year
